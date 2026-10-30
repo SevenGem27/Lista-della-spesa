@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Ogni lista condivisa vive sotto households/{codice}.
+    // Il codice (16 caratteri casuali) è la chiave: chi lo conosce può usare
+    // la lista, ma nessuno può elencare le liste esistenti per scoprirne i codici.
+    match /households/{hid} {
+      allow get, create, update: if request.auth != null && hid.size() == 16;
+      allow list, delete: if false;
+
+      match /{col}/{docId} {
+        allow read, write: if request.auth != null
+                           && hid.size() == 16
+                           && col in ['items', 'catalog', 'history'];
+      }
+    }
+  }
+}

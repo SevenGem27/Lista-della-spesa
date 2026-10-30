@@ -67,7 +67,7 @@ input{font:inherit;color:inherit}
 }
 .scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:calc(var(--sq)*2) 18px calc(130px + var(--safe-b)) 0;}
-.head{padding-left:66px;margin-bottom:calc(var(--sq)*0.5)}
+.head{padding-left:66px;padding-right:96px;margin-bottom:calc(var(--sq)*0.5)}
 .head h1{font-family:var(--hand);font-weight:700;color:var(--ink);font-size:42px;line-height:44px;margin:0;letter-spacing:.3px}
 .head .sub{font-family:var(--hand);font-size:22px;line-height:22px;color:var(--ink-soft);height:22px}
 
@@ -224,6 +224,18 @@ ul.list{list-style:none;margin:0;padding:0}
 .backup .btn{height:42px;font-size:14px}
 .none-yet{font-family:var(--hand);font-size:26px;color:var(--muted);padding:16px 4px;line-height:1.3}
 
+/* ---------- condivisione ---------- */
+.share-btn{position:absolute;top:22px;right:12px;z-index:3;height:34px;padding:0 11px 0 9px;border-radius:17px;display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.85);border:1px solid rgba(31,58,138,.18);color:var(--ink);font-size:12.5px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.share-btn svg{width:18px;height:18px}
+.dot{width:8px;height:8px;border-radius:50%;background:#b9b5aa;flex:0 0 auto}
+.dot.online{background:#2e9e5b}.dot.connecting,.dot.offline{background:#e0a020}.dot.error{background:var(--red)}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(16px,5.4vw,22px);font-weight:700;letter-spacing:1px;white-space:nowrap;color:var(--ink);background:#fff;border:1.5px dashed rgba(31,58,138,.35);border-radius:12px;padding:14px 10px;text-align:center;margin:4px 0 12px;user-select:all;-webkit-user-select:all}
+.code-in{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20px;letter-spacing:1.5px;text-transform:uppercase}
+.sep{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px}
+.sep::before,.sep::after{content:"";flex:1;border-top:1px dashed rgba(31,58,138,.25)}
+.status-line{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#4a473f;margin:-4px 0 14px}
+
 /* ---------- toast ---------- */
 .toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 96px);transform:translate(-50%,20px);opacity:0;z-index:40;
   background:#2b2a27;color:#fff;padding:10px 16px;border-radius:22px;font-size:14px;transition:.25s;pointer-events:none;max-width:86vw;text-align:center}
@@ -235,6 +247,7 @@ ul.list{list-style:none;margin:0;padding:0}
 
 <div class="sheet-wrap" id="mainWrap">
   <div class="sheet" id="mainSheet">
+    <button class="share-btn" id="btnShare" aria-label="Condivisione"><span class="dot" id="syncDot"></span><span id="syncTxt">Solo qui</span></button>
     <div class="scroll paper-grid" id="mainScroll">
       <div class="head">
         <h1>Lista della spesa</h1>
@@ -280,6 +293,7 @@ ul.list{list-style:none;margin:0;padding:0}
 <div class="toast" id="toast"></div>
 <input type="file" id="fileIn" accept="application/json,.json" hidden>
 
+<script src="firebase-config.js" onerror="window.FIREBASE_CONFIG=window.FIREBASE_CONFIG||null"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -437,9 +451,15 @@ function migrate(st){
 let S = loadLocal() || fresh();
 const dirtyYears = new Set();
 let mainDirty = false;
-function persist(years){
+function saveLocal(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
+/* ops: modifiche da inviare alla lista condivisa
+   ['set', col, id, data, inc?]  scrive/unisce un documento (inc = campo da incrementare)
+   ['upd', col, id, data]        aggiorna un documento esistente
+   ['del', col, id]              cancella */
+function persist(years, ops){
   S.updated = Date.now();
-  try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){}
+  saveLocal();
+  if (Cloud.hid){ if (ops && ops.length) cloudCommit(ops); return; }
   mainDirty = true;
   (years || []).forEach(y => dirtyYears.add(String(y)));
   remoteQueue();
@@ -512,6 +532,205 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !wind
 }
 
 /* =========================================================
+   Lista condivisa (Firebase / Firestore)
+   households/{codice}/items | catalog | history
+   ========================================================= */
+const FB_BASE = window.__FB_BASE__ || 'https://www.gstatic.com/firebasejs/10.12.2/';
+const CK = 'spesa.cloud', PK = 'spesa.pending';
+const Cloud = {
+  hid: (() => { try{ return localStorage.getItem(CK) || null; }catch(e){ return null; } })(),
+  fb: null, unsubs: [], status: 'off', starting: null,
+  pending: (() => { try{ return JSON.parse(localStorage.getItem(PK)) || []; }catch(e){ return []; } })()
+};
+const cid = key => encodeURIComponent(key).replace(/\./g, '%2E').replace(/\*/g, '%2A') || '_';
+const itemData = i => ({key: i.key, name: i.name, aisle: A(i.aisle), done: !!i.done, t: i.t});
+const histData = h => ({date: h.date, ts: h.ts, amount: h.amount, items: h.items || []});
+function catOp(key){ const c = S.catalog[key]; return ['set', 'catalog', cid(key), {key, name: c.name, aisle: A(c.aisle), uses: c.uses || 0, last: c.last || 0}]; }
+function fullOps(st){
+  return [
+    ...st.list.map(i => ['set', 'items', i.id, itemData(i)]),
+    ...Object.entries(st.catalog).map(([k, c]) => ['set', 'catalog', cid(k), {key: k, name: c.name, aisle: A(c.aisle), uses: c.uses || 0, last: c.last || 0}]),
+    ...st.history.map(h => ['set', 'history', h.id, histData(h)])
+  ];
+}
+function genCode(){
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  return Array.from(b, x => abc[x % 32]).join('');
+}
+const fmtCode = c => c.replace(/(.{4})(?=.)/g, '$1-');
+const cleanCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+function setStatus(st){ Cloud.status = st; paintSync(); }
+function paintSync(){
+  const st = Cloud.hid ? Cloud.status : 'off';
+  $('#syncDot').className = 'dot ' + st;
+  $('#syncTxt').textContent = !Cloud.hid ? 'Solo qui' : st === 'online' ? 'Condivisa' : st === 'error' ? 'Errore' : st === 'offline' ? 'Offline' : 'Collego…';
+  const m = $('#shareStatus'); if (m) m.innerHTML = statusLine();
+}
+function statusLine(){
+  const t = {online:'Sincronizzata: le modifiche arrivano subito sull\'altro telefono.', offline:'Offline: le modifiche vengono salvate e inviate appena torna la rete.',
+    connecting:'Mi sto collegando…', error:'Problema di collegamento. Controlla la configurazione di Firebase.', off:''}[Cloud.status] || '';
+  return `<span class="dot ${Cloud.status}"></span><span>${t}</span>`;
+}
+async function fbLoad(){
+  if (Cloud.fb) return Cloud.fb;
+  if (!window.FIREBASE_CONFIG) throw new Error('config');
+  const [appM, authM, fs] = await Promise.all([
+    import(FB_BASE + 'firebase-app.js'), import(FB_BASE + 'firebase-auth.js'), import(FB_BASE + 'firebase-firestore.js')]);
+  const app = appM.initializeApp(window.FIREBASE_CONFIG);
+  let db;
+  try{ db = fs.initializeFirestore(app, {localCache: fs.persistentLocalCache({tabManager: fs.persistentMultipleTabManager()})}); }
+  catch(e){ db = fs.getFirestore(app); }
+  const auth = authM.getAuth(app);
+  await new Promise(res => { const u = authM.onAuthStateChanged(auth, () => { u(); res(); }); });
+  if (!auth.currentUser) await authM.signInAnonymously(auth);
+  Cloud.fb = {fs, db};
+  return Cloud.fb;
+}
+const hhRef = (hid) => Cloud.fb.fs.doc(Cloud.fb.db, 'households', hid || Cloud.hid);
+async function writeOps(ops, hid, wait){
+  const {fs, db} = Cloud.fb, base = hhRef(hid), jobs = [];
+  const upds = ops.filter(o => o[0] === 'upd'), rest = ops.filter(o => o[0] !== 'upd');
+  for (let i = 0; i < rest.length; i += 400){
+    const b = fs.writeBatch(db);
+    rest.slice(i, i + 400).forEach(([t, col, id, data, inc]) => {
+      const ref = fs.doc(base, col, id);
+      if (t === 'del') b.delete(ref);
+      else { const d = Object.assign({}, data); if (inc) d[inc] = fs.increment(1); b.set(ref, d, {merge: true}); }
+    });
+    jobs.push(b.commit());
+  }
+  upds.forEach(([, col, id, data]) => jobs.push(fs.updateDoc(fs.doc(base, col, id), data).catch(e => { if (!e || e.code !== 'not-found') throw e; })));
+  if (wait) return Promise.all(jobs);
+  Promise.all(jobs).catch(e => { console.warn(e); if (e && e.code === 'permission-denied') setStatus('error'); });
+}
+function savePending(){ try{ localStorage.setItem(PK, JSON.stringify(Cloud.pending)); }catch(e){} }
+function cloudCommit(ops){
+  if (Cloud.fb && Cloud.unsubs.length){ writeOps(ops); return; }
+  Cloud.pending.push(...ops); savePending();   // inviate appena il collegamento è pronto
+}
+function detach(){ Cloud.unsubs.forEach(u => { try{ u(); }catch(e){} }); Cloud.unsubs = []; }
+function attach(){
+  const {fs} = Cloud.fb, base = hhRef();
+  detach();
+  const seen = {items:false, catalog:false, history:false};
+  const on = (col, fn) => Cloud.unsubs.push(fs.onSnapshot(fs.collection(base, col), {includeMetadataChanges: true}, snap => {
+    fn(snap.docs.map(d => Object.assign({id: d.id}, d.data())));
+    seen[col] = true;
+    setStatus(snap.metadata.fromCache ? (navigator.onLine === false ? 'offline' : (Cloud.status === 'online' ? 'online' : 'connecting')) : 'online');
+    if (seen.items && seen.catalog && seen.history){ saveLocal(); render(); if (panelOpen) renderPanel(); }
+  }, err => { console.warn(err); setStatus('error'); }));
+  on('items', docs => { S.list = docs.filter(d => d.name).map(d => ({id: d.id, key: d.key || norm(d.name), name: d.name, aisle: A(d.aisle), done: !!d.done, t: d.t || 0})); });
+  on('catalog', docs => { const c = {}; docs.forEach(d => { if (d.key && d.name) c[d.key] = {name: d.name, aisle: A(d.aisle), uses: d.uses || 0, last: d.last || 0}; }); S.catalog = c; });
+  on('history', docs => { S.history = docs.filter(d => d.date && isFinite(d.amount)).map(d => ({id: d.id, date: d.date, ts: d.ts || 0, amount: +d.amount, items: d.items || []})); });
+}
+async function cloudStart(){
+  if (Cloud.starting) return Cloud.starting;
+  setStatus('connecting');
+  Cloud.starting = (async () => {
+    try{
+      await fbLoad();
+      if (Cloud.pending.length){ const p = Cloud.pending; Cloud.pending = []; savePending(); writeOps(p); }
+      attach();
+    }catch(e){
+      console.warn(e);
+      setStatus(navigator.onLine === false ? 'offline' : 'error');
+      Cloud.starting = null;
+    }
+  })();
+  return Cloud.starting;
+}
+window.addEventListener('online', () => { if (Cloud.hid && !Cloud.unsubs.length) cloudStart(); });
+window.addEventListener('offline', () => { if (Cloud.hid) setStatus('offline'); });
+
+async function createHousehold(btn){
+  btn.disabled = true; btn.textContent = 'Creo la lista condivisa…';
+  try{
+    await fbLoad();
+    const hid = genCode();
+    await Cloud.fb.fs.setDoc(hhRef(hid), {created: Date.now(), v: 1});
+    await writeOps(fullOps(S), hid, true);
+    Cloud.hid = hid; localStorage.setItem(CK, hid);
+    attach(); setStatus('online');
+    openShare();
+    toast('Lista condivisa creata');
+  }catch(e){
+    console.warn(e); btn.disabled = false; btn.textContent = 'Crea una lista condivisa';
+    toast(e && e.message === 'config' ? 'Manca la configurazione di Firebase' : 'Non riesco a collegarmi: controlla la rete e riprova');
+  }
+}
+async function joinHousehold(code, btn, errEl){
+  const hid = cleanCode(code);
+  if (hid.length !== 16){ errEl.textContent = 'Il codice ha 16 caratteri, es. ABCD-EFGH-JKLM-NPQR'; return; }
+  btn.disabled = true; btn.textContent = 'Controllo il codice…'; errEl.textContent = '';
+  try{
+    await fbLoad();
+    const snap = await Cloud.fb.fs.getDoc(hhRef(hid));
+    if (!snap.exists()){ errEl.textContent = 'Codice non trovato: controlla di averlo scritto bene'; btn.disabled = false; btn.textContent = 'Unisciti'; return; }
+    Cloud.hid = hid; localStorage.setItem(CK, hid);
+    Cloud.pending = []; savePending();
+    attach();
+    closeModal(); toast('Collegato alla lista condivisa');
+  }catch(e){
+    console.warn(e); btn.disabled = false; btn.textContent = 'Unisciti';
+    errEl.textContent = e && e.message === 'config' ? 'Manca la configurazione di Firebase' : 'Non riesco a collegarmi: controlla la rete e riprova';
+  }
+}
+function leaveHousehold(){
+  detach();
+  Cloud.hid = null; Cloud.pending = []; savePending(); setStatus('off');
+  try{ localStorage.removeItem(CK); }catch(e){}
+  S.updated = Date.now(); saveLocal(); render();
+  closeModal(); toast('Condivisione disattivata su questo telefono');
+}
+function openShare(){
+  let html;
+  if (!window.FIREBASE_CONFIG){
+    html = `<h2>Lista condivisa</h2>
+      <p>${window.claude ? 'La condivisione con un\'altra persona funziona nella versione installata dal tuo sito (GitHub Pages), collegata a Firebase.'
+        : 'Per condividere la lista serve collegare Firebase: incolla la configurazione del progetto nel file <b>firebase-config.js</b> del sito e ricarica l\'app.'}</p>
+      <div class="actions"><button class="btn primary" id="shClose">Ho capito</button></div>`;
+  } else if (Cloud.hid){
+    html = `<h2>Lista condivisa</h2>
+      <div class="status-line" id="shareStatus">${statusLine()}</div>
+      <p>Per collegare un altro telefono, apri l'app lì, tocca il pulsante in alto a destra e inserisci questo codice:</p>
+      <div class="code">${fmtCode(Cloud.hid)}</div>
+      <div class="actions"><button class="btn ghost" id="shCopy">Condividi il codice</button><button class="btn primary" id="shClose">Fatto</button></div>
+      <div class="sep">oppure</div>
+      <button class="btn danger" id="shLeave" style="width:100%">Smetti di condividere su questo telefono</button>
+      <div class="mini" style="margin-top:8px">La lista resta online per l'altro telefono; qui ne resta una copia non condivisa.</div>`;
+  } else {
+    const n = S.list.length + S.history.length;
+    html = `<h2>Lista condivisa</h2>
+      <p>Condividi lista, corsie e storico delle spese con un'altra persona: ogni modifica compare subito su entrambi i telefoni, anche dopo essere stati offline.</p>
+      <button class="btn primary" id="shCreate" style="width:100%">Crea una lista condivisa</button>
+      <div class="mini" style="margin-top:6px">La lista e lo storico di questo telefono diventano quelli condivisi.</div>
+      <div class="sep">oppure</div>
+      <label class="sugg-title" for="shCode">Hai già un codice?</label>
+      <input class="hand-input code-in" id="shCode" placeholder="ABCD-EFGH-JKLM-NPQR" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <div class="err" id="shErr" style="margin-top:6px"></div>
+      ${n ? `<div class="mini">Unendoti, ${S.history.length ? 'la lista e lo storico' : 'la lista'} di questo telefono verranno sostituiti da quelli condivisi. Se vuoi conservarli, prima esporta un backup dallo Storico.</div>` : ''}
+      <div class="actions"><button class="btn ghost" id="shClose">Annulla</button><button class="btn primary" id="shJoin">Unisciti</button></div>`;
+  }
+  const o = openModal(html, {center: true});
+  const q = s => o.querySelector(s);
+  q('#shClose') && q('#shClose').addEventListener('click', () => closeModal());
+  q('#shCreate') && q('#shCreate').addEventListener('click', e => createHousehold(e.currentTarget));
+  q('#shJoin') && q('#shJoin').addEventListener('click', e => joinHousehold(q('#shCode').value, e.currentTarget, q('#shErr')));
+  q('#shCode') && q('#shCode').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); q('#shJoin').click(); } });
+  q('#shLeave') && q('#shLeave').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!b.dataset.sure){ b.dataset.sure = '1'; b.textContent = 'Tocca ancora per confermare'; return; }
+    leaveHousehold();
+  });
+  q('#shCopy') && q('#shCopy').addEventListener('click', async () => {
+    const text = `Codice della nostra lista della spesa: ${fmtCode(Cloud.hid)}`;
+    try{ if (navigator.share){ await navigator.share({text}); return; } }catch(e){ if (e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(fmtCode(Cloud.hid)); toast('Codice copiato'); }catch(e){ toast('Tieni premuto il codice per copiarlo'); }
+  });
+}
+
+/* =========================================================
    Lista
    ========================================================= */
 let promptDismissed = false;
@@ -579,7 +798,7 @@ function render(){
 function toggle(id){
   const it = S.list.find(i => i.id === id); if (!it) return;
   it.done = !it.done; buzz(8);
-  persist(); render();
+  persist(null, [['upd', 'items', it.id, {done: it.done}]]); render();
   if (it.done && S.list.length && S.list.every(i => i.done) && !promptDismissed) setTimeout(() => openComplete(true), 380);
   if (!it.done) promptDismissed = false;
 }
@@ -589,7 +808,7 @@ function addItem(rawName, aisle){
   if (!key) return false;
   const ex = S.list.find(i => i.key === key);
   if (ex){
-    if (ex.done){ ex.done = false; persist(); render(); toast(`«${ex.name}» rimesso in lista`); }
+    if (ex.done){ ex.done = false; persist(null, [['upd', 'items', ex.id, {done: false}]]); render(); toast(`«${ex.name}» rimesso in lista`); }
     else toast(`«${ex.name}» è già in lista`);
     return true;
   }
@@ -598,7 +817,8 @@ function addItem(rawName, aisle){
   S.catalog[key] = {name: c && aisle === undefined ? c.name : name, aisle: a, uses: (c ? c.uses : 0) + 1, last: Date.now()};
   const item = {id: uid(), key, name: S.catalog[key].name, aisle: a, done: false, t: Date.now()};
   S.list.push(item); justAdded = item.id; promptDismissed = false;
-  persist(); render();
+  const cc = S.catalog[key];
+  persist(null, [['set', 'catalog', cid(key), {key, name: cc.name, aisle: cc.aisle, last: cc.last}, 'uses'], ['set', 'items', item.id, itemData(item)]]); render();
   return true;
 }
 
@@ -705,7 +925,7 @@ function openAdd(){
     } else if (forget){
       const k = forget.dataset.k, c = S.catalog[k];
       if (!c) return;
-      if (forget.dataset.sure){ delete S.catalog[k]; persist(); refresh(); toast(`«${c.name}» dimenticato`); }
+      if (forget.dataset.sure){ delete S.catalog[k]; persist(null, [['del', 'catalog', cid(k)]]); refresh(); toast(`«${c.name}» dimenticato`); }
       else { forget.dataset.sure = '1'; forget.textContent = '?'; forget.style.color = 'var(--red)'; setTimeout(() => { if (forget.isConnected){ delete forget.dataset.sure; forget.textContent = '×'; forget.style.color = ''; } }, 2500); toast('Tocca di nuovo per toglierlo dai suggerimenti'); }
     }
   });
@@ -715,9 +935,10 @@ function openAdd(){
     const known = S.catalog[k];
     const useSel = touched || !known || known.aisle == null;
     if (addItem(v, useSel ? sel : undefined)){
-      const c = S.catalog[k];
-      if (c && useSel && c.aisle !== sel){ c.aisle = sel; }
-      if (c && S.list.some(i => i.key === k && i.aisle !== c.aisle)){ S.list.forEach(i => { if (i.key === k) i.aisle = c.aisle; }); persist(); render(); }
+      const c = S.catalog[k], ops = [];
+      if (c && useSel && c.aisle !== A(sel)){ c.aisle = A(sel); ops.push(catOp(k)); }
+      if (c) S.list.forEach(i => { if (i.key === k && i.aisle !== c.aisle){ i.aisle = c.aisle; ops.push(['upd', 'items', i.id, {aisle: c.aisle}]); } });
+      if (ops.length){ persist(null, ops); render(); }
       inName.value = ''; touched = false; refresh(); inName.focus();
     }
   });
@@ -744,21 +965,22 @@ function openEdit(id){
   const paint = bindStrip(o, 'edStrip', a => { sel = a; paint(sel); });
   setTimeout(() => paint(sel), 30);
   o.querySelector('#edDel').addEventListener('click', () => {
-    S.list = S.list.filter(i => i.id !== id); persist(); render(); closeModal(); toast(`«${it.name}» tolto dalla lista`);
+    S.list = S.list.filter(i => i.id !== id); persist(null, [['del', 'items', id]]); render(); closeModal(); toast(`«${it.name}» tolto dalla lista`);
   });
   o.querySelector('#edForm').addEventListener('submit', e => {
     e.preventDefault();
     const nv = o.querySelector('#edName').value; if (!norm(nv)) return;
-    const a = A(sel), nk = norm(nv), old = S.catalog[it.key];
+    const a = A(sel), nk = norm(nv), old = S.catalog[it.key], ops = [];
     if (nk !== it.key){
-      if (old && old.uses <= 1) delete S.catalog[it.key];
+      if (old && old.uses <= 1){ delete S.catalog[it.key]; ops.push(['del', 'catalog', cid(it.key)]); }
       const c = S.catalog[nk];
       S.catalog[nk] = {name: cap(nv), aisle: a, uses: c ? c.uses : 1, last: Date.now()};
     } else {
       S.catalog[nk] = Object.assign({}, old || {uses:1}, {name: cap(nv), aisle: a, last: Date.now()});
     }
     it.key = nk; it.name = cap(nv); it.aisle = a;
-    persist(); render(); closeModal();
+    ops.push(catOp(nk), ['upd', 'items', it.id, {key: nk, name: it.name, aisle: a}]);
+    persist(null, ops); render(); closeModal();
   });
 }
 
@@ -802,10 +1024,11 @@ function openComplete(auto){
     const n = parseAmount(inp.value);
     if (!(n > 0)) { o.querySelector('#cErr').textContent = 'Scrivi un importo valido, ad esempio 42,50'; inp.focus(); return; }
     const d = today();
-    S.history.push({id: uid(), date: d, ts: Date.now(), amount: n, items: done.map(i => i.name)});
+    const h = {id: uid(), date: d, ts: Date.now(), amount: n, items: done.map(i => i.name)};
+    S.history.push(h);
     S.list = rest;
     o._onClose = null;
-    persist([d.slice(0,4)]); render(); closeModal();
+    persist([d.slice(0,4)], [['set', 'history', h.id, histData(h)], ...done.map(i => ['del', 'items', i.id])]); render(); closeModal();
     promptDismissed = false;
     toast(`Spesa di ${eur(n)} salvata`);
   });
@@ -855,7 +1078,7 @@ function renderHistory(body){
           <div class="row"><button class="btn danger" data-del="${h.id}">Elimina questa spesa</button></div></div>` : ''}
       </li>`).join('') + `</ul>`;
   });
-  html += `<div class="backup">${R ? 'I dati sono salvati nel tuo account e restano anche cambiando dispositivo.' : 'I dati restano salvati su questo dispositivo.'} Ogni tanto conviene esportare un backup, da reimportare su un nuovo telefono.
+  html += `<div class="backup">${Cloud.hid ? 'La lista è condivisa: i dati sono salvati online e su ogni telefono collegato.' : R ? 'I dati sono salvati nel tuo account e restano anche cambiando dispositivo.' : 'I dati restano salvati su questo dispositivo.'} Ogni tanto conviene esportare un backup, da reimportare su un nuovo telefono.
     <div class="row"><button class="btn ghost" id="bkOut">Esporta backup</button><button class="btn ghost" id="bkIn">Importa backup</button></div></div>`;
   body.innerHTML = html;
   body.querySelectorAll('.entry').forEach(b => b.addEventListener('click', () => { openEntry = openEntry === b.dataset.id ? null : b.dataset.id; renderPanel(); }));
@@ -863,7 +1086,7 @@ function renderHistory(body){
     if (!b.dataset.sure){ b.dataset.sure = '1'; b.textContent = 'Tocca ancora per eliminare definitivamente'; return; }
     const h = S.history.find(x => x.id === b.dataset.del); if (!h) return;
     S.history = S.history.filter(x => x.id !== h.id); openEntry = null;
-    persist([h.date.slice(0,4)]); renderPanel(); toast('Spesa eliminata');
+    persist([h.date.slice(0,4)], [['del', 'history', h.id]]); renderPanel(); toast('Spesa eliminata');
   }));
   $('#bkOut').addEventListener('click', exportBackup);
   $('#bkIn').addEventListener('click', () => $('#fileIn').click());
@@ -1123,19 +1346,22 @@ $('#fileIn').addEventListener('change', async e => {
   try{ const j = JSON.parse(await f.text()); st = sane(j.state || j); }catch(err){}
   if (!st){ toast('File di backup non valido'); return; }
   const o = openModal(`<h2>Importa backup</h2>
-    <p>Il backup contiene ${st.history.length} spese, ${Object.keys(st.catalog).length} elementi ricordati e ${st.list.length} in lista. Sostituirà i dati attuali su questo dispositivo.</p>
+    <p>Il backup contiene ${st.history.length} spese, ${Object.keys(st.catalog).length} elementi ricordati e ${st.list.length} in lista. ${Cloud.hid ? 'Verrà unito alla lista condivisa: lo vedrete entrambi.' : 'Sostituirà i dati attuali su questo dispositivo.'}</p>
     <div class="actions"><button class="btn ghost" id="imNo">Annulla</button><button class="btn primary" id="imOk">Sostituisci</button></div>`, {center:true});
   o.querySelector('#imNo').addEventListener('click', () => closeModal());
   o.querySelector('#imOk').addEventListener('click', () => {
     const years = new Set([...S.history, ...st.history].map(h => h.date.slice(0,4)));
-    S = st; migrate(S); persist([...years]); render(); renderPanel(); closeModal(); toast('Backup importato');
+    S = st; migrate(S); persist([...years], fullOps(S)); render(); renderPanel(); closeModal(); toast(Cloud.hid ? 'Backup unito alla lista condivisa' : 'Backup importato');
   });
 });
 
 /* =========================================================
    Avvio
    ========================================================= */
-if (migrate(S)) persist();
+if (!Cloud.hid && migrate(S)) persist();
+$('#btnShare').addEventListener('click', openShare);
+paintSync();
+if (Cloud.hid) cloudStart();
 $('#btnAdd').addEventListener('click', openAdd);
 $('#btnHistory').addEventListener('click', openPanel);
 $('#btnFinish').addEventListener('click', () => openComplete(false));
