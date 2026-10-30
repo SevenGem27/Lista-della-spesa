@@ -12,6 +12,14 @@ window.FIREBASE_CONFIG = null;
 
 // ⬇︎ incolla qui ⬇︎
 
+const firebaseConfig = {
+  apiKey: "AIzaSyAJiLlbCxm_-wsOndkDowXMMVLs5G_Jaes",
+  authDomain: "spesa-a3032.firebaseapp.com",
+  projectId: "spesa-a3032",
+  storageBucket: "spesa-a3032.firebasestorage.app",
+  messagingSenderId: "609221457611",
+  appId: "1:609221457611:web:bc301a3b451de063680d4e"
+};
 
 
 // ⬆︎ incolla qui ⬆︎
