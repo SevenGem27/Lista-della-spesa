@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lista della spesa</title>
+<meta name="theme-color" content="#d8d0c1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Spesa">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --table:#d8d0c1;
+  --paper:#fdfcf7;
+  --grid:rgba(70,120,185,.20);
+  --margin:rgba(214,72,72,.45);
+  --ink:#1f3a8a;
+  --ink-soft:#4a5f9e;
+  --red:#c2412f;
+  --text:#2b2a27;
+  --muted:#7a766c;
+  --pencil:#f2c230;
+  --pencil-dark:#c79a10;
+  --sq:22px;
+  --hand:'Caveat','Noteworthy','Segoe Print','Bradley Hand','Comic Sans MS',cursive;
+  --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden}
+body{
+  background:var(--table);
+  background-image:
+    radial-gradient(rgba(255,255,255,.18) 1px,transparent 1.5px),
+    radial-gradient(rgba(0,0,0,.05) 1px,transparent 1.5px);
+  background-size:7px 7px,11px 11px;
+  font-family:var(--ui);color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+input{font:inherit;color:inherit}
+
+/* ---------- foglio ---------- */
+.sheet-wrap{
+  position:fixed;left:50%;transform:translateX(-50%);
+  top:calc(var(--safe-t) + 10px);bottom:0;
+  width:min(100% - 14px,560px);
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.18)) drop-shadow(0 6px 14px rgba(60,45,20,.18));
+}
+.sheet{position:absolute;inset:0;background:var(--paper);}
+.paper-grid{
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(90deg,transparent 51px,var(--margin) 51px,var(--margin) 53px,transparent 53px),
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100% 100%,var(--sq) var(--sq),var(--sq) var(--sq);
+  background-attachment:local;
+}
+.scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(var(--sq)*2) 18px calc(130px + var(--safe-b)) 0;}
+.head{padding-left:66px;margin-bottom:calc(var(--sq)*0.5)}
+.head h1{font-family:var(--hand);font-weight:700;color:var(--ink);font-size:42px;line-height:44px;margin:0;letter-spacing:.3px}
+.head .sub{font-family:var(--hand);font-size:22px;line-height:22px;color:var(--ink-soft);height:22px}
+
+ul.list{list-style:none;margin:0;padding:0}
+.item{
+  position:relative;display:flex;align-items:center;min-height:calc(var(--sq)*2);
+  padding:0 8px 0 66px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  touch-action:manipulation;cursor:pointer;
+}
+.item .aisle{
+  position:absolute;left:8px;top:50%;transform:translateY(-50%) rotate(-4deg);
+  width:36px;height:36px;display:grid;place-items:center;
+  font-family:var(--hand);font-weight:700;font-size:24px;color:var(--red);
+}
+.item .aisle svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.item .aisle.none{color:transparent}
+.item .aisle.rep{width:50px;left:2px;font-size:16px;letter-spacing:-.3px}
+.strip{display:flex;gap:7px;overflow-x:auto;padding:4px 2px 10px;margin:0 -20px 0 -2px;padding-right:20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.strip::-webkit-scrollbar{display:none}
+.strip button{flex:0 0 auto;min-width:40px;height:38px;padding:0 11px;border-radius:19px;background:#fff;border:1.5px solid rgba(194,65,47,.28);color:var(--red);font-weight:600;font-size:14px}
+.strip button.n{font-family:var(--hand);font-size:22px;font-weight:700;padding:0 8px}
+.strip button.on{background:var(--red);border-color:var(--red);color:#fff}
+.strip button.none-b{border-color:rgba(0,0,0,.15);color:var(--muted)}
+.strip button.none-b.on{background:#7a766c;border-color:#7a766c;color:#fff}
+.strip-label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:8px 0 2px}
+.strip-label b{color:var(--red);font-weight:600;text-transform:none;letter-spacing:0;font-size:13px}
+.item .txt{position:relative;font-family:var(--hand);font-weight:500;font-size:31px;line-height:1.15;color:var(--ink);
+  padding:4px 2px;word-break:break-word;transition:color .25s}
+.item .txt::after{
+  content:"";position:absolute;left:-6px;right:-6px;top:52%;height:3px;border-radius:3px;
+  background:var(--ink);transform-origin:left center;transform:rotate(-1.6deg) scaleX(0);
+  transition:transform .28s cubic-bezier(.6,.05,.3,1);opacity:.9;
+}
+.item.done .txt{color:rgba(31,58,138,.42)}
+.item.done .txt::after{transform:rotate(-1.6deg) scaleX(1)}
+.item.pressing{background:rgba(31,58,138,.06)}
+.item.new .txt{animation:write .5s ease-out}
+@keyframes write{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+
+.empty{padding:calc(var(--sq)*1) 18px 0 66px;font-family:var(--hand);color:var(--muted);font-size:26px;line-height:44px}
+.empty b{color:var(--ink-soft);font-weight:700}
+.hint{padding:12px 8px 0 66px;font-size:12.5px;color:var(--muted);line-height:1.4}
+
+/* ---------- barra comandi ---------- */
+.bar{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100%,560px);
+  padding:0 18px calc(var(--safe-b) + 16px);display:flex;align-items:flex-end;justify-content:space-between;
+  pointer-events:none;z-index:5;
+}
+.bar > *{pointer-events:auto}
+.round{
+  width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+  background:#fff;color:var(--ink);box-shadow:0 2px 3px rgba(0,0,0,.15),0 6px 16px rgba(50,40,20,.18);
+  transition:transform .15s;
+}
+.round:active,.pill:active{transform:scale(.94)}
+.round svg{width:26px;height:26px}
+.round.pencil{width:66px;height:66px;background:var(--pencil);color:#3a2c05}
+.round.pencil svg{width:30px;height:30px}
+.pill{
+  height:52px;padding:0 20px 0 16px;border-radius:26px;display:flex;align-items:center;gap:8px;
+  background:var(--ink);color:#fff;font-weight:600;font-size:15px;letter-spacing:.2px;margin-bottom:2px;
+  box-shadow:0 2px 3px rgba(0,0,0,.15),0 6px 16px rgba(20,30,80,.25);transition:transform .15s;
+}
+.pill svg{width:22px;height:22px}
+
+/* ---------- finestre ---------- */
+.overlay{position:fixed;left:0;right:0;top:0;height:100%;z-index:20;display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(40,32,18,.32);opacity:0;transition:opacity .2s}
+.overlay.show{opacity:1}
+.overlay.center{align-items:center;padding:16px}
+.card-wrap{width:min(100%,560px);filter:drop-shadow(0 -2px 12px rgba(40,30,10,.25));transform:translateY(30px);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.overlay.show .card-wrap{transform:none}
+.card{background:var(--paper);padding:30px 20px calc(var(--safe-b) + 18px);max-height:calc(var(--vvh,100vh) - 30px);overflow-y:auto}
+.overlay.center .card{padding-bottom:20px;border-radius:0 0 6px 6px}
+.card h2{font-family:var(--hand);font-weight:700;color:var(--ink);font-size:34px;line-height:1;margin:0 0 10px}
+.card p{margin:0 0 14px;line-height:1.45;font-size:15px;color:#4a473f}
+.field{display:flex;align-items:flex-end;gap:12px;margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px}
+.field .f{flex:1;min-width:0}
+.field .f.aisle-f{flex:0 0 92px}
+.hand-input{
+  width:100%;border:0;border-bottom:2px solid rgba(31,58,138,.35);background:transparent;outline:none;
+  font-family:var(--hand);font-size:30px;color:var(--ink);padding:2px 2px 0;border-radius:0;
+}
+.hand-input:focus{border-bottom-color:var(--ink)}
+.hand-input::placeholder{color:rgba(31,58,138,.32)}
+.money{display:flex;align-items:baseline;gap:6px}
+.money span{font-family:var(--hand);font-size:34px;color:var(--ink)}
+.money .hand-input{font-size:40px}
+.err{color:var(--red);font-size:13px;min-height:18px;margin:-6px 0 8px}
+.actions{display:flex;gap:10px;margin-top:6px}
+.btn{flex:1;height:48px;border-radius:12px;font-weight:600;font-size:15px}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.ghost{background:rgba(31,58,138,.08);color:var(--ink)}
+.btn.danger{background:rgba(194,65,47,.1);color:var(--red)}
+.btn:active{opacity:.85}
+.sugg-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:6px 0 4px}
+.sugg{list-style:none;margin:0 0 8px;padding:0;max-height:min(38vh,300px);overflow-y:auto}
+.sugg li{display:flex;align-items:center;gap:8px;border-bottom:1px dashed rgba(31,58,138,.18)}
+.sugg li button.pick{flex:1;display:flex;align-items:center;gap:10px;text-align:left;min-height:46px;padding:4px 2px}
+.sugg .nm{font-family:var(--hand);font-size:26px;color:var(--ink);flex:1}
+.sugg .cr{font-size:12.5px;color:var(--red);white-space:nowrap}
+.sugg .in{font-size:12px;color:var(--muted)}
+.sugg li.inlist .nm{color:rgba(31,58,138,.4)}
+.sugg button.forget{width:34px;height:34px;border-radius:50%;color:var(--muted);font-size:20px;display:grid;place-items:center}
+.sugg button.forget:active{background:rgba(0,0,0,.06)}
+.mini{font-size:12.5px;color:var(--muted);line-height:1.4;margin:4px 0 10px}
+
+/* ---------- storico ---------- */
+.panel{position:fixed;inset:0;z-index:15;display:flex;justify-content:center;background:var(--table);
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.panel.show{transform:none}
+.panel .sheet-wrap{top:calc(var(--safe-t) + 10px)}
+.panel .scroll{padding:30px 16px calc(40px + var(--safe-b)) 16px}
+.panel-top{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.back{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--ink);margin-left:-6px}
+.back svg{width:26px;height:26px}
+.panel-top h1{font-family:var(--hand);font-weight:700;color:var(--ink);font-size:38px;margin:0;line-height:1}
+.tabs{display:flex;background:rgba(31,58,138,.08);border-radius:12px;padding:4px;margin:6px 0 16px}
+.tabs button{flex:1;height:38px;border-radius:9px;font-weight:600;font-size:14px;color:var(--ink-soft)}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stats.three{grid-template-columns:1fr 1fr 1fr}
+.stat{background:#fff;border:1px solid rgba(31,58,138,.14);border-radius:12px;padding:10px 12px}
+.stat .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.stat .v{font-family:var(--hand);font-size:30px;font-weight:700;color:var(--ink);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.month-h{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 4px;padding:0 2px}
+.month-h b{font-family:var(--hand);font-size:27px;color:var(--ink);text-transform:capitalize}
+.month-h span{font-size:13.5px;color:var(--muted);font-weight:600}
+.entries{list-style:none;margin:0;padding:0;background:#fff;border:1px solid rgba(31,58,138,.14);border-radius:12px;overflow:hidden}
+.entries li{border-top:1px solid rgba(31,58,138,.1)}
+.entries li:first-child{border-top:0}
+.entry{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 12px}
+.entry .d{flex:1}
+.entry .d b{display:block;font-weight:600;font-size:15px;text-transform:capitalize}
+.entry .d small{color:var(--muted);font-size:12.5px}
+.entry .a{font-family:var(--hand);font-size:28px;font-weight:700;color:var(--ink)}
+.entry-detail{padding:0 12px 12px;font-size:13.5px;color:#4a473f;line-height:1.5}
+.entry-detail .its{margin-bottom:10px}
+.entry-detail .row{display:flex;gap:8px}
+.entry-detail .row .btn{height:40px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip{height:34px;padding:0 13px;border-radius:17px;background:#fff;border:1px solid rgba(31,58,138,.2);font-size:13.5px;font-weight:600;color:var(--ink-soft)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.dates{display:flex;gap:10px;margin-bottom:16px}
+.dates label{flex:1;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.dates input{display:block;width:100%;margin-top:4px;height:42px;border-radius:10px;border:1px solid rgba(31,58,138,.25);background:#fff;padding:0 10px;font-size:15px;color:var(--text);-webkit-appearance:none;appearance:none}
+.chart-box{background:#fff;border:1px solid rgba(31,58,138,.14);border-radius:12px;padding:12px 10px 6px;margin-bottom:16px}
+.chart-box .t{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:0 2px 6px}
+.chart-box svg{display:block;width:100%;height:auto}
+.backup{margin-top:24px;padding-top:14px;border-top:1px dashed rgba(31,58,138,.25);font-size:13px;color:var(--muted);line-height:1.5}
+.backup .row{display:flex;gap:10px;margin-top:10px}
+.backup .btn{height:42px;font-size:14px}
+.none-yet{font-family:var(--hand);font-size:26px;color:var(--muted);padding:16px 4px;line-height:1.3}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 96px);transform:translate(-50%,20px);opacity:0;z-index:40;
+  background:#2b2a27;color:#fff;padding:10px 16px;border-radius:22px;font-size:14px;transition:.25s;pointer-events:none;max-width:86vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="sheet-wrap" id="mainWrap">
+  <div class="sheet" id="mainSheet">
+    <div class="scroll paper-grid" id="mainScroll">
+      <div class="head">
+        <h1>Lista della spesa</h1>
+        <div class="sub" id="sub"></div>
+      </div>
+      <ul class="list" id="list"></ul>
+      <div id="emptyBox"></div>
+    </div>
+  </div>
+</div>
+
+<nav class="bar">
+  <button class="round" id="btnHistory" aria-label="Storico spese">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7.5V12l3 2"/></svg>
+  </button>
+  <button class="pill" id="btnFinish" aria-label="Concludi la spesa">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11h10.2L20 7.5H7"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="m11 10.5 2 2 3.5-3.5"/></svg>
+    Concludi
+  </button>
+  <button class="round pencil" id="btnAdd" aria-label="Aggiungi alla lista">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4.5 1.5L5 15 16.5 3.5z"/><path d="m14.5 5.5 3 3"/></svg>
+  </button>
+</nav>
+
+<section class="panel" id="panel" aria-hidden="true">
+  <div class="sheet-wrap" id="panelWrap">
+    <div class="sheet" id="panelSheet">
+      <div class="scroll paper-grid" id="panelScroll" style="background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:var(--sq) var(--sq),var(--sq) var(--sq)">
+        <div class="panel-top">
+          <button class="back" id="btnBack" aria-label="Torna alla lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <h1>Storico spese</h1>
+        </div>
+        <div class="tabs" role="tablist">
+          <button id="tabList" class="on" role="tab">Spese</button>
+          <button id="tabReport" role="tab">Report PDF</button>
+        </div>
+        <div id="panelBody"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileIn" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+/* =========================================================
+   Utilità
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const norm = s => s.trim().toLowerCase().replace(/\s+/g, ' ');
+const cap = s => { s = s.trim().replace(/\s+/g, ' '); return s.charAt(0).toUpperCase() + s.slice(1); };
+const EUR = new Intl.NumberFormat('it-IT', {style:'currency', currency:'EUR'});
+const eur = n => EUR.format(n || 0);
+const pad = n => String(n).padStart(2, '0');
+const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseIso = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const today = () => isoDate(new Date());
+const fmtShort = s => { const d = parseIso(s); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`; };
+const fmtDay = s => parseIso(s).toLocaleDateString('it-IT', {weekday:'short', day:'numeric', month:'short'});
+const fmtLong = d => d.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
+const MONTHS = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+const MONTHS_L = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+function parseAmount(v){
+  v = String(v || '').trim().replace(/[€\s]/g, '');
+  if (!v) return NaN;
+  if (v.includes(',')) v = v.replace(/\./g, '').replace(',', '.');
+  const n = Number(v);
+  return isFinite(n) ? Math.round(n * 100) / 100 : NaN;
+}
+function buzz(ms){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
+let toastT;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+}
+/* bordo strappato: poligono deterministico */
+function torn(seed, depth){
+  let x = seed * 9301 + 49297; const rnd = () => (x = (x * 9301 + 49297) % 233280) / 233280;
+  const pts = []; let p = 0;
+  while (p < 100){ pts.push(`${p.toFixed(2)}% ${(rnd()*depth).toFixed(1)}px`); p += 1.2 + rnd()*2.6; }
+  pts.push(`100% ${(rnd()*depth).toFixed(1)}px`, '100% 100%', '0% 100%');
+  return `polygon(${pts.join(',')})`;
+}
+$('#mainSheet').style.clipPath = torn(7, 9);
+$('#panelSheet').style.clipPath = torn(31, 9);
+
+/* =========================================================
+   Stato e memoria
+   ---------------------------------------------------------
+   list:    [{id, key, name, aisle, done, t}]
+   catalog: {key: {name, aisle, uses, last}}
+   history: [{id, date:'YYYY-MM-DD', ts, amount, items:[...]}]
+   ========================================================= */
+const LS = 'spesa.v1';
+function fresh(){ return {v:1, list:[], catalog:{}, history:[], updated:0}; }
+function sane(o){
+  if (!o || typeof o !== 'object') return null;
+  return {
+    v:1,
+    list: Array.isArray(o.list) ? o.list.filter(i => i && i.name) : [],
+    catalog: o.catalog && typeof o.catalog === 'object' ? o.catalog : {},
+    history: Array.isArray(o.history) ? o.history.filter(h => h && h.date && isFinite(h.amount)) : [],
+    updated: +o.updated || 0,
+    seedV: +o.seedV || 0
+  };
+}
+function loadLocal(){ try{ return sane(JSON.parse(localStorage.getItem(LS))); }catch(e){ return null; } }
+/* --- mappa del negozio: ordine di percorso --- */
+const LAYOUT = [
+  {id:'FV',  name:'Frutta e verdura', badge:'F&V'},
+  {id:'1'},
+  {id:'PES', name:'Pescheria',   badge:'pesce'},
+  {id:'MAC', name:'Macelleria',  badge:'carne'},
+  {id:'GAS', name:'Gastronomia', badge:'gastro'},
+  {id:'PAS', name:'Pasticceria', badge:'dolci'},
+  {id:'PAN', name:'Panetteria',  badge:'pane'},
+  ...Array.from({length:17}, (_, i) => ({id:String(i + 2)}))
+];
+const LPOS = Object.fromEntries(LAYOUT.map((l, i) => [l.id, l]));
+LAYOUT.forEach((l, i) => l.rank = i);
+function A(a){ if (a == null || a === '') return null; a = String(a).trim().toUpperCase(); return a || null; }
+function aisleRank(a){ a = A(a); if (a == null) return 1e9; if (LPOS[a]) return LPOS[a].rank; const n = parseFloat(a); return isFinite(n) ? 1000 + n : 5e8; }
+function aisleLabel(a){ a = A(a); if (a == null) return ''; return LPOS[a] && LPOS[a].name ? LPOS[a].name : 'corsia ' + a; }
+function aisleBadge(a){ a = A(a); return LPOS[a] && LPOS[a].badge ? LPOS[a].badge : a; }
+const isRep = a => !!(LPOS[A(a)] && LPOS[A(a)].name);
+const SEED_V = 1;
+const SEEDS = {
+  FV:'Mele|Pere|Banane|Arance|Mandarini|Limoni|Kiwi|Uva|Fragole|Ananas|Pomodori|Pomodorini|Insalata|Lattuga|Rucola|Patate|Cipolle|Aglio|Carote|Zucchine|Melanzane|Peperoni|Finocchi|Sedano|Spinaci|Broccoli|Cavolfiore|Funghi|Basilico|Prezzemolo|Avocado',
+  '1':'Latte|Uova|Yogurt|Burro|Panna|Mozzarella|Ricotta|Mascarpone|Stracchino|Formaggio|Formaggio spalmabile|Parmigiano|Grana|Sottilette|Formaggini',
+  PES:'Pesce fresco|Salmone|Orata|Branzino|Merluzzo|Gamberi|Cozze|Vongole|Calamari',
+  MAC:'Carne macinata|Petto di pollo|Pollo|Fettine|Bistecca|Salsiccia|Hamburger|Arrosto|Spezzatino|Cotolette',
+  GAS:'Prosciutto crudo|Prosciutto cotto|Salame|Mortadella|Bresaola|Speck|Affettati',
+  PAS:'Torta|Pasticcini|Brioche|Cornetti|Crostata',
+  PAN:'Pane|Pane integrale|Focaccia|Panini|Baguette',
+  '2':'Riso|Sale|Tonno|Sgombro|Carne in scatola|Piselli in scatola|Fagioli|Ceci|Lenticchie|Mais|Sottaceti|Sottoli|Olive|Carciofini|Maionese|Ketchup|Senape',
+  '3':'Farina|Lievito per dolci|Lievito per pizza|Preparato per pizza|Preparato per torte|Budino|Marmellata|Confettura|Miele|Crema spalmabile|Fette biscottate',
+  '4':'Pasta|Spaghetti|Penne|Fusilli|Rigatoni|Linguine|Pasta all\'uovo|Tagliatelle|Lasagne|Pastina|Pasta senza glutine|Passata di pomodoro|Pelati|Polpa di pomodoro|Concentrato di pomodoro|Deodorante per ambienti',
+  '5':'Tovaglia|Tappetino',
+  '6':'Biscotti|Biscotti integrali|Cereali|Muesli|Fiocchi d\'avena|Corn flakes',
+  '7':'Frutta sciroppata|Piatti di plastica|Bicchieri di plastica|Teglie in alluminio|Giocattoli',
+  '8':'Pannolini|Salviette umidificate|Fazzoletti di carta',
+  '9':'Dentifricio|Spazzolino|Collutorio|Filo interdentale|Assorbenti',
+  '10':'Carta igienica',
+  '11':'Shampoo|Balsamo|Bagnoschiuma|Docciaschiuma|Sapone liquido|Deodorante|Rasoi|Schiuma da barba',
+  '12':'Carta da cucina|Tovaglioli di carta',
+  '13':'Detersivo lavatrice|Detersivo in polvere|Ammorbidente|Candeggina|Acqua distillata|Smacchiatore|Sapone da bucato|Detersivo piatti|Detersivo pavimenti|Sgrassatore|Anticalcare|Pastiglie lavastoviglie|Aperitivo',
+  '14':'Succo di frutta|Liquore|Amaro|Marsala|Aperitivo analcolico',
+  '15':'Vino rosso|Vino bianco|Birra|Spumante|Prosecco|Pile',
+  '16':'Cibo per gatti|Cibo per cani|Lettiera|Lampadine|Spugne|Panni per pavimenti|Lucido per scarpe',
+  '17':'Gelato|Torta gelato|Pizza surgelata|Verdure surgelate|Piselli surgelati|Spinaci surgelati|Minestrone surgelato|Bastoncini di pesce|Patatine surgelate|Piatti pronti surgelati|Salatini',
+  '18':'Patatine|Grissini|Crackers|Pan carrè|Acqua|Acqua frizzante|Bibite|Aranciata|Tè freddo|Zucchero|Dolcificante'
+};
+/* proposta di corsia per elementi nuovi (parole chiave dai cartelli) */
+const GUESS = [
+  [/surgelat|gelat|bastoncini|salatini/, '17'],
+  [/acqua distillata|detersiv|ammorbident|candeggin|smacchiat|sgrassat|anticalcare|lavastovigli|bucato/, '13'],
+  [/ambient/, '4'],
+  [/in scatola|tonno|sgombr|sottacet|sottol|sott'olio|\bolive|maionese|ketchup|senape|\bsals[ae]\b|\briso\b|^sale\b|fagiol|\bceci\b|lenticch|\bmais\b/, '2'],
+  [/farina|lievito|budin|marmellat|confettur|\bmiele|fette biscottate|preparato|crema spalmabile|nutella/, '3'],
+  [/^pasta|spaghett|^penne|fusilli|rigaton|linguin|tagliatell|lasagn|pastin|passata|pelati|polpa|concentrato/, '4'],
+  [/biscott|cereal|muesli|avena|corn ?flakes/, '6'],
+  [/sciroppat|di plastica|alluminio|giocattol/, '7'],
+  [/pannolin|salviett|fazzolett|neonat/, '8'],
+  [/dentifric|spazzolin|collutori|interdental|assorbent/, '9'],
+  [/carta igienica/, '10'],
+  [/shampoo|balsamo|bagnoschiuma|docciaschiuma|sapone|deodorante|rasoi|barba/, '11'],
+  [/carta da cucina|tovagliol|carta casa|scottex/, '12'],
+  [/succ[oh]|liquor|\bamaro|marsala|analcolic|aperitiv/, '14'],
+  [/\bvin[oi]\b|birr|spumante|prosecco|champagne|^pile\b/, '15'],
+  [/gatt|\bcan[ei]\b|crocchett|lettiera|lampadin|spugn|panni|lucido/, '16'],
+  [/patatine|grissin|cracker|pan ?carr|\bacqua|bibit|aranciata|\bcola\b|t[eèé] freddo|zucchero|dolcificant/, '18'],
+  [/latte|\buov|yogurt|burro|panna|mozzarell|ricott|mascarpone|stracchin|formagg|parmigian|\bgrana|sottilett/, '1'],
+  [/pesce|salmone|\borat|branzin|gamber|cozze|vongole|calamar|merluzz|polpo|seppi/, 'PES'],
+  [/carne|pollo|vitello|manzo|maiale|bistecc|salsicc|hamburger|macinat|arrosto|spezzatino|cotolett|fettin/, 'MAC'],
+  [/prosciutt|salame|mortadell|bresaol|speck|affettat|salum/, 'GAS'],
+  [/torta|pasticcin|brioche|cornett|crostat|dolc/, 'PAS'],
+  [/^pane\b|focacc|panin|baguette|\bpane /, 'PAN'],
+  [/\bmel[ea]\b|\bper[ae]\b|banan|aranc|mandarin|limon|kiwi|\buva\b|fragol|ananas|pomodor|insalat|rucola|patat|cipoll|aglio|carot|zucchin|melanzan|peperon|finocch|sedano|spinac|broccol|cavol|fungh|basilico|prezzemolo|avocado|frutta|verdur|lattuga|pesche|albicocch|cilieg|anguri|melone/, 'FV']
+];
+function guessAisle(name){ const n = norm(name); if (!n) return null; for (const [re, a] of GUESS) if (re.test(n)) return a; return null; }
+function migrate(st){
+  st.list.forEach(i => { i.aisle = A(i.aisle); });
+  Object.values(st.catalog).forEach(c => { c.aisle = A(c.aisle); });
+  if ((st.seedV || 0) < SEED_V){
+    Object.entries(SEEDS).forEach(([a, names]) => names.split('|').forEach(n => {
+      const k = norm(n), c = st.catalog[k];
+      if (!c) st.catalog[k] = {name:n, aisle:a, uses:0, last:0};
+      else if (c.aisle == null) c.aisle = a;
+    }));
+    st.list.forEach(i => { if (i.aisle == null && st.catalog[i.key] && st.catalog[i.key].aisle != null) i.aisle = st.catalog[i.key].aisle; });
+    st.seedV = SEED_V;
+    return true;
+  }
+  return false;
+}
+let S = loadLocal() || fresh();
+const dirtyYears = new Set();
+let mainDirty = false;
+function persist(years){
+  S.updated = Date.now();
+  try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){}
+  mainDirty = true;
+  (years || []).forEach(y => dirtyYears.add(String(y)));
+  remoteQueue();
+}
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+
+/* --- sincronizzazione durevole quando la pagina gira come artifact su claude.ai --- */
+let R = null; // {col, main}
+let writing = false, writeT = null;
+function remoteQueue(){
+  if (!R) return;
+  clearTimeout(writeT); writeT = setTimeout(remoteFlush, 600);
+}
+async function remoteFlush(){
+  if (!R || writing) return;
+  writing = true;
+  try{
+    while (mainDirty || dirtyYears.size){
+      if (mainDirty){
+        mainDirty = false;
+        await R.col.doc('main').set({list: JSON.stringify(S.list), catalog: JSON.stringify(S.catalog), seedV: S.seedV || 0, updated: S.updated});
+      }
+      for (const y of [...dirtyYears]){
+        dirtyYears.delete(y);
+        const entries = S.history.filter(h => h.date.slice(0,4) === y);
+        await R.col.doc('y' + y).set({entries: JSON.stringify(entries), updated: S.updated});
+      }
+    }
+  }catch(e){
+    if (e && e.code === 'quota_exceeded') toast('Spazio di archiviazione pieno: esporta un backup');
+    else if (e && e.code === 'unavailable'){ mainDirty = true; setTimeout(remoteFlush, 2500 + Math.random()*1500); }
+  }finally{ writing = false; }
+}
+async function remotePull(){
+  if (!R) return;
+  try{
+    const snap = await R.col.get();
+    let main = null; const hist = [];
+    snap.docs.forEach(d => {
+      const v = d.data(); if (!v) return;
+      if (d.id === 'main') main = v;
+      else if (/^y\d{4}$/.test(d.id)) { try{ hist.push(...JSON.parse(v.entries)); }catch(e){} }
+    });
+    if (main && (+main.updated || 0) > S.updated){
+      const st = sane({list: JSON.parse(main.list || '[]'), catalog: JSON.parse(main.catalog || '{}'), history: hist, updated: main.updated, seedV: main.seedV});
+      if (st){ S = st; if (migrate(S)) persist(); try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} render(); if (panelOpen) renderPanel(); }
+    } else if (!main || (+main.updated || 0) < S.updated){
+      if (S.updated){ mainDirty = true; S.history.forEach(h => dirtyYears.add(h.date.slice(0,4))); remoteFlush(); }
+    }
+  }catch(e){}
+}
+let DL = null;
+(async function initPlatform(){
+  if (!window.claude || typeof window.claude.use !== 'function') return;
+  try{ DL = await window.claude.use('downloads'); }catch(e){}
+  try{
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    R = {col: db.collection('data/users/' + id)};
+    await remotePull();
+  }catch(e){ R = null; }
+})();
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') remotePull(); });
+
+/* service worker solo quando l'app è ospitata come PWA vera */
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !window.claude){
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+
+/* =========================================================
+   Lista
+   ========================================================= */
+let promptDismissed = false;
+function sorted(){
+  return S.list.slice().sort((a, b) => {
+    return aisleRank(a.aisle) - aisleRank(b.aisle) || a.t - b.t;
+  });
+}
+const circle = (() => {
+  const variants = [
+    'M18 4c7.5-.3 14 4.7 14 13.5S26 32.5 17.6 32 3.7 26.3 4.2 17.8 9.6 4.6 19.5 4.4',
+    'M17 3.6c8.6.2 15.2 5.9 14.6 14.4S24.8 32.4 17 32.3 4 25.8 3.9 17.2 10.4 4 19.8 5',
+    'M19 4.2C27 4.4 32.4 10 32 18s-7 14.2-15.1 14S3.6 25.4 4 17 11 3.9 20.6 4.9'
+  ];
+  return n => `<svg viewBox="0 0 36 36" preserveAspectRatio="none"><path d="${variants[n % 3]}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".75"/></svg>`;
+})();
+let justAdded = null;
+function render(){
+  const ul = $('#list');
+  const items = sorted();
+  const left = items.filter(i => !i.done).length;
+  $('#sub').textContent = items.length
+    ? (left ? `${fmtLong(new Date())} · ${left} da prendere` : `${fmtLong(new Date())} · tutto preso!`)
+    : fmtLong(new Date());
+  let prev = '__';
+  ul.innerHTML = items.map(i => {
+    const a = i.aisle == null ? '' : i.aisle;
+    const show = String(a) !== prev; prev = String(a);
+    const badge = show && a !== ''
+      ? `<span class="aisle${isRep(a) ? ' rep' : ''}" title="${esc(aisleLabel(a))}">${circle(aisleRank(a))}${esc(aisleBadge(a))}</span>`
+      : `<span class="aisle none"></span>`;
+    return `<li class="item${i.done ? ' done' : ''}${i.id === justAdded ? ' new' : ''}" data-id="${i.id}">${badge}<span class="txt">${esc(i.name)}</span></li>`;
+  }).join('');
+  justAdded = null;
+  $('#emptyBox').innerHTML = items.length
+    ? (items.length <= 3 && !S.history.length ? `<div class="hint">Tocca un elemento per depennarlo · tienilo premuto per cambiarne la corsia o toglierlo.</div>` : '')
+    : `<div class="empty">La lista è vuota.<br>Tocca la <b>matita</b> per aggiungere<br>quello che ti serve.</div>`;
+}
+
+/* tocco = depenna, pressione lunga = modifica */
+(function bindList(){
+  const ul = $('#list');
+  let lpT = null, start = null, li = null, fired = false;
+  const clear = () => { clearTimeout(lpT); lpT = null; if (li) li.classList.remove('pressing'); };
+  ul.addEventListener('pointerdown', e => {
+    li = e.target.closest('.item'); if (!li) return;
+    fired = false; start = {x:e.clientX, y:e.clientY};
+    li.classList.add('pressing');
+    lpT = setTimeout(() => { fired = true; clear(); buzz(15); openEdit(li.dataset.id); }, 550);
+  });
+  ul.addEventListener('pointermove', e => {
+    if (!start || !lpT) return;
+    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 9){ clear(); start = null; }
+  });
+  ul.addEventListener('pointerup', e => {
+    const wasPending = !!lpT; clear();
+    if (!start || fired || !wasPending) { start = null; return; }
+    start = null;
+    const target = e.target.closest('.item'); if (target) toggle(target.dataset.id);
+  });
+  ul.addEventListener('pointercancel', () => { clear(); start = null; });
+  ul.addEventListener('contextmenu', e => { if (e.target.closest('.item')) e.preventDefault(); });
+})();
+
+function toggle(id){
+  const it = S.list.find(i => i.id === id); if (!it) return;
+  it.done = !it.done; buzz(8);
+  persist(); render();
+  if (it.done && S.list.length && S.list.every(i => i.done) && !promptDismissed) setTimeout(() => openComplete(true), 380);
+  if (!it.done) promptDismissed = false;
+}
+
+function addItem(rawName, aisle){
+  const name = cap(rawName); const key = norm(rawName);
+  if (!key) return false;
+  const ex = S.list.find(i => i.key === key);
+  if (ex){
+    if (ex.done){ ex.done = false; persist(); render(); toast(`«${ex.name}» rimesso in lista`); }
+    else toast(`«${ex.name}» è già in lista`);
+    return true;
+  }
+  const c = S.catalog[key];
+  const a = aisle === undefined ? (c ? c.aisle : null) : A(aisle);
+  S.catalog[key] = {name: c && aisle === undefined ? c.name : name, aisle: a, uses: (c ? c.uses : 0) + 1, last: Date.now()};
+  const item = {id: uid(), key, name: S.catalog[key].name, aisle: a, done: false, t: Date.now()};
+  S.list.push(item); justAdded = item.id; promptDismissed = false;
+  persist(); render();
+  return true;
+}
+
+/* =========================================================
+   Finestre (modali)
+   ========================================================= */
+let modalEl = null;
+function fitViewport(){
+  const vv = window.visualViewport; if (!modalEl || !vv) return;
+  modalEl.style.height = vv.height + 'px'; modalEl.style.top = vv.offsetTop + 'px';
+  document.documentElement.style.setProperty('--vvh', vv.height + 'px');
+}
+if (window.visualViewport){ visualViewport.addEventListener('resize', fitViewport); visualViewport.addEventListener('scroll', fitViewport); }
+function openModal(html, {center=false, onClose}={}){
+  closeModal(true);
+  const o = document.createElement('div');
+  o.className = 'overlay' + (center ? ' center' : '');
+  o.innerHTML = `<div class="card-wrap"><div class="card" role="dialog" aria-modal="true">${html}</div></div>`;
+  o.querySelector('.card').style.clipPath = torn(Math.floor(Math.random()*999), 8);
+  o.addEventListener('pointerdown', e => { if (e.target === o) o._down = true; });
+  o.addEventListener('click', e => { if (e.target === o && o._down) closeModal(); o._down = false; });
+  o._onClose = onClose;
+  document.body.appendChild(o); modalEl = o; fitViewport();
+  requestAnimationFrame(() => o.classList.add('show'));
+  return o;
+}
+function closeModal(instant){
+  const o = modalEl; if (!o) return; modalEl = null;
+  if (o._onClose) o._onClose();
+  if (instant){ o.remove(); return; }
+  o.classList.remove('show'); setTimeout(() => o.remove(), 220);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (modalEl) closeModal(); else if (panelOpen) closePanel(); } });
+
+/* ---------- selettore corsia/reparto ---------- */
+function stripHTML(id){
+  return `<div class="strip-label"><span>Corsia o reparto</span><b id="${id}Lbl"></b></div>
+    <div class="strip" id="${id}">${LAYOUT.map(l => `<button type="button" data-a="${l.id}" class="${l.name ? '' : 'n'}">${l.name || l.id}</button>`).join('')}
+    <button type="button" data-a="" class="none-b">nessuna</button></div>`;
+}
+function bindStrip(root, id, onPick){
+  const el = root.querySelector('#' + id), lbl = root.querySelector('#' + id + 'Lbl');
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (b){ buzz(5); onPick(A(b.dataset.a)); } });
+  return (a, note) => {
+    a = A(a);
+    el.querySelectorAll('button').forEach(b => {
+      const on = A(b.dataset.a) === a;
+      b.classList.toggle('on', on);
+      if (on){ const L = b.offsetLeft - el.clientWidth / 2 + b.offsetWidth / 2; el.scrollTo({left: Math.max(0, L), behavior: 'smooth'}); }
+    });
+    lbl.textContent = note || (a ? aisleLabel(a) : '');
+  };
+}
+
+/* ---------- aggiungi ---------- */
+function openAdd(){
+  const o = openModal(`
+    <h2>Aggiungi alla lista</h2>
+    <form id="addForm" autocomplete="off">
+      <div class="field"><div class="f"><label for="inName">Cosa ti serve?</label>
+        <input class="hand-input" id="inName" placeholder="es. latte" enterkeyhint="done" autocapitalize="sentences" autocomplete="off" spellcheck="false"></div></div>
+      ${stripHTML('addStrip')}
+      <div class="sugg-title" id="suggTitle"></div>
+      <ul class="sugg" id="sugg"></ul>
+      <div class="actions">
+        <button type="button" class="btn ghost" id="addClose">Fatto</button>
+        <button type="submit" class="btn primary">Aggiungi</button>
+      </div>
+    </form>`);
+  const inName = o.querySelector('#inName');
+  let sel = null, touched = false;
+  const paint = bindStrip(o, 'addStrip', a => { sel = a; touched = true; paint(sel); });
+  const refresh = () => {
+    const q = norm(inName.value);
+    const exact = q ? S.catalog[q] : null;
+    if (!touched){
+      if (exact && exact.aisle != null){ sel = exact.aisle; paint(sel, aisleLabel(sel) + ' · in memoria'); }
+      else { const g = guessAisle(q); sel = g; paint(sel, g ? aisleLabel(g) + ' · proposta' : (q ? 'scegli, se la conosci' : '')); }
+    }
+    const inList = new Set(S.list.filter(i => !i.done).map(i => i.key));
+    let rows = Object.entries(S.catalog);
+    if (q){
+      rows = rows.filter(([k]) => k.includes(q) && k !== q)
+        .sort((a, b) => (b[0].startsWith(q) - a[0].startsWith(q)) || (b[1].uses - a[1].uses) || a[0].localeCompare(b[0]));
+    } else {
+      rows = rows.filter(([, c]) => c.uses > 0)
+        .sort((a, b) => (inList.has(a[0]) - inList.has(b[0])) || (b[1].uses - a[1].uses) || (b[1].last - a[1].last));
+    }
+    rows = rows.slice(0, 30);
+    o.querySelector('#suggTitle').textContent = rows.length ? (q ? 'Suggerimenti' : 'Usati di recente') : '';
+    o.querySelector('#sugg').innerHTML = rows.map(([k, c]) => `
+      <li class="${inList.has(k) ? 'inlist' : ''}">
+        <button type="button" class="pick" data-k="${esc(k)}"><span class="nm">${esc(c.name)}</span>
+          ${inList.has(k) ? '<span class="in">già in lista</span>' : (c.aisle != null ? `<span class="cr">${esc(aisleLabel(c.aisle))}</span>` : '')}</button>
+        <button type="button" class="forget" data-k="${esc(k)}" aria-label="Dimentica ${esc(c.name)}">×</button>
+      </li>`).join('');
+  };
+  inName.addEventListener('input', () => { if (!inName.value) touched = false; refresh(); });
+  o.querySelector('#sugg').addEventListener('click', e => {
+    const pick = e.target.closest('.pick'), forget = e.target.closest('.forget');
+    if (pick){
+      const c = S.catalog[pick.dataset.k];
+      if (c && addItem(c.name)) { buzz(8); inName.value = ''; touched = false; refresh(); }
+    } else if (forget){
+      const k = forget.dataset.k, c = S.catalog[k];
+      if (!c) return;
+      if (forget.dataset.sure){ delete S.catalog[k]; persist(); refresh(); toast(`«${c.name}» dimenticato`); }
+      else { forget.dataset.sure = '1'; forget.textContent = '?'; forget.style.color = 'var(--red)'; setTimeout(() => { if (forget.isConnected){ delete forget.dataset.sure; forget.textContent = '×'; forget.style.color = ''; } }, 2500); toast('Tocca di nuovo per toglierlo dai suggerimenti'); }
+    }
+  });
+  o.querySelector('#addForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = inName.value, k = norm(v); if (!k) { inName.focus(); return; }
+    const known = S.catalog[k];
+    const useSel = touched || !known || known.aisle == null;
+    if (addItem(v, useSel ? sel : undefined)){
+      const c = S.catalog[k];
+      if (c && useSel && c.aisle !== sel){ c.aisle = sel; }
+      if (c && S.list.some(i => i.key === k && i.aisle !== c.aisle)){ S.list.forEach(i => { if (i.key === k) i.aisle = c.aisle; }); persist(); render(); }
+      inName.value = ''; touched = false; refresh(); inName.focus();
+    }
+  });
+  o.querySelector('#addClose').addEventListener('click', () => closeModal());
+  refresh();
+  setTimeout(() => inName.focus(), 60);
+}
+
+/* ---------- modifica elemento ---------- */
+function openEdit(id){
+  const it = S.list.find(i => i.id === id); if (!it) return;
+  const o = openModal(`
+    <h2>Modifica</h2>
+    <form id="edForm" autocomplete="off">
+      <div class="field"><div class="f"><label>Nome</label><input class="hand-input" id="edName" value="${esc(it.name)}"></div></div>
+      ${stripHTML('edStrip')}
+      <div class="mini">La corsia viene aggiornata anche nei suggerimenti.</div>
+      <div class="actions">
+        <button type="button" class="btn danger" id="edDel">Togli dalla lista</button>
+        <button type="submit" class="btn primary">Salva</button>
+      </div>
+    </form>`);
+  let sel = it.aisle;
+  const paint = bindStrip(o, 'edStrip', a => { sel = a; paint(sel); });
+  setTimeout(() => paint(sel), 30);
+  o.querySelector('#edDel').addEventListener('click', () => {
+    S.list = S.list.filter(i => i.id !== id); persist(); render(); closeModal(); toast(`«${it.name}» tolto dalla lista`);
+  });
+  o.querySelector('#edForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const nv = o.querySelector('#edName').value; if (!norm(nv)) return;
+    const a = A(sel), nk = norm(nv), old = S.catalog[it.key];
+    if (nk !== it.key){
+      if (old && old.uses <= 1) delete S.catalog[it.key];
+      const c = S.catalog[nk];
+      S.catalog[nk] = {name: cap(nv), aisle: a, uses: c ? c.uses : 1, last: Date.now()};
+    } else {
+      S.catalog[nk] = Object.assign({}, old || {uses:1}, {name: cap(nv), aisle: a, last: Date.now()});
+    }
+    it.key = nk; it.name = cap(nv); it.aisle = a;
+    persist(); render(); closeModal();
+  });
+}
+
+/* ---------- concludi la spesa ---------- */
+function openComplete(auto){
+  const done = S.list.filter(i => i.done), rest = S.list.filter(i => !i.done);
+  let title, text, ok;
+  if (auto){
+    title = 'Spesa completata!';
+    text = 'Hai depennato tutto. Indica quanto hai speso: la lista verrà pulita e l\'importo salvato nello storico con la data di oggi.';
+    ok = 'Pulisci e salva';
+  } else if (done.length){
+    title = 'Concludi la spesa';
+    text = `${done.length === 1 ? 'L\'elemento depennato verrà cancellato' : `I ${done.length} elementi depennati verranno cancellati`}` +
+      (rest.length ? `; ${rest.length === 1 ? 'quello non preso resta' : `i ${rest.length} non presi restano`} in lista per la prossima volta.` : '.') +
+      ' Quanto hai speso?';
+    ok = 'Concludi e salva';
+  } else {
+    title = 'Concludi la spesa';
+    text = S.list.length
+      ? 'Non hai depennato niente: la lista resterà com\'è. Vuoi comunque registrare una spesa per oggi?'
+      : 'La lista è vuota. Vuoi comunque registrare una spesa per oggi?';
+    ok = 'Registra la spesa';
+  }
+  const o = openModal(`
+    <h2>${title}</h2>
+    <p>${esc(text)}</p>
+    <form id="cForm" autocomplete="off">
+      <label class="sugg-title" for="inAmount">Importo speso</label>
+      <div class="money"><span>€</span><input class="hand-input" id="inAmount" inputmode="decimal" placeholder="0,00" enterkeyhint="done"></div>
+      <div class="err" id="cErr"></div>
+      <div class="actions">
+        <button type="button" class="btn ghost" id="cNo">${auto ? 'Non ancora' : 'Annulla'}</button>
+        <button type="submit" class="btn primary">${ok}</button>
+      </div>
+    </form>`, {center:true, onClose(){ if (auto) promptDismissed = true; }});
+  const inp = o.querySelector('#inAmount');
+  o.querySelector('#cNo').addEventListener('click', () => closeModal());
+  o.querySelector('#cForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const n = parseAmount(inp.value);
+    if (!(n > 0)) { o.querySelector('#cErr').textContent = 'Scrivi un importo valido, ad esempio 42,50'; inp.focus(); return; }
+    const d = today();
+    S.history.push({id: uid(), date: d, ts: Date.now(), amount: n, items: done.map(i => i.name)});
+    S.list = rest;
+    o._onClose = null;
+    persist([d.slice(0,4)]); render(); closeModal();
+    promptDismissed = false;
+    toast(`Spesa di ${eur(n)} salvata`);
+  });
+  setTimeout(() => inp.focus(), 80);
+}
+
+/* =========================================================
+   Storico e report
+   ========================================================= */
+let panelOpen = false, tab = 'list', openEntry = null;
+const R_ = {preset:'month', from:null, to:null};
+function openPanel(){
+  panelOpen = true; tab = 'list'; openEntry = null;
+  $('#panel').classList.add('show'); $('#panel').setAttribute('aria-hidden', 'false');
+  setPreset(R_.preset); renderPanel(); $('#panelScroll').scrollTop = 0;
+}
+function closePanel(){ panelOpen = false; $('#panel').classList.remove('show'); $('#panel').setAttribute('aria-hidden', 'true'); }
+function setTab(t){ tab = t; $('#tabList').classList.toggle('on', t === 'list'); $('#tabReport').classList.toggle('on', t === 'report'); renderPanel(); }
+$('#tabList').addEventListener('click', () => setTab('list'));
+$('#tabReport').addEventListener('click', () => setTab('report'));
+$('#btnBack').addEventListener('click', closePanel);
+
+function sum(arr){ return arr.reduce((s, h) => s + h.amount, 0); }
+function renderPanel(){
+  const body = $('#panelBody');
+  if (tab === 'list') return renderHistory(body);
+  return renderReport(body);
+}
+function renderHistory(body){
+  const H = S.history.slice().sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts);
+  const now = new Date(), ym = `${now.getFullYear()}-${pad(now.getMonth()+1)}`, y = String(now.getFullYear());
+  let html = `<div class="stats">
+    <div class="stat"><div class="k">${MONTHS_L[now.getMonth()]}</div><div class="v">${eur(sum(H.filter(h => h.date.startsWith(ym))))}</div></div>
+    <div class="stat"><div class="k">Anno ${y}</div><div class="v">${eur(sum(H.filter(h => h.date.startsWith(y))))}</div></div>
+  </div>`;
+  if (!H.length) html += `<div class="none-yet">Nessuna spesa registrata.<br>Quando concludi una spesa, l'importo comparirà qui.</div>`;
+  const groups = [];
+  H.forEach(h => { const k = h.date.slice(0,7); let g = groups[groups.length-1]; if (!g || g.k !== k) groups.push(g = {k, items:[]}); g.items.push(h); });
+  groups.forEach(g => {
+    const [yy, mm] = g.k.split('-').map(Number);
+    html += `<div class="month-h"><b>${MONTHS_L[mm-1]} ${yy}</b><span>${eur(sum(g.items))}</span></div><ul class="entries">` +
+      g.items.map(h => `<li><button class="entry" data-id="${h.id}"><span class="d"><b>${esc(fmtDay(h.date))}</b>
+        <small>${h.items && h.items.length ? `${h.items.length} ${h.items.length === 1 ? 'articolo' : 'articoli'}` : 'spesa registrata'}</small></span>
+        <span class="a">${eur(h.amount)}</span></button>
+        ${openEntry === h.id ? `<div class="entry-detail">
+          ${h.items && h.items.length ? `<div class="its">${h.items.map(esc).join(', ')}</div>` : ''}
+          <div class="row"><button class="btn danger" data-del="${h.id}">Elimina questa spesa</button></div></div>` : ''}
+      </li>`).join('') + `</ul>`;
+  });
+  html += `<div class="backup">${R ? 'I dati sono salvati nel tuo account e restano anche cambiando dispositivo.' : 'I dati restano salvati su questo dispositivo.'} Ogni tanto conviene esportare un backup, da reimportare su un nuovo telefono.
+    <div class="row"><button class="btn ghost" id="bkOut">Esporta backup</button><button class="btn ghost" id="bkIn">Importa backup</button></div></div>`;
+  body.innerHTML = html;
+  body.querySelectorAll('.entry').forEach(b => b.addEventListener('click', () => { openEntry = openEntry === b.dataset.id ? null : b.dataset.id; renderPanel(); }));
+  body.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+    if (!b.dataset.sure){ b.dataset.sure = '1'; b.textContent = 'Tocca ancora per eliminare definitivamente'; return; }
+    const h = S.history.find(x => x.id === b.dataset.del); if (!h) return;
+    S.history = S.history.filter(x => x.id !== h.id); openEntry = null;
+    persist([h.date.slice(0,4)]); renderPanel(); toast('Spesa eliminata');
+  }));
+  $('#bkOut').addEventListener('click', exportBackup);
+  $('#bkIn').addEventListener('click', () => $('#fileIn').click());
+}
+
+function setPreset(p){
+  R_.preset = p; const n = new Date(); let f, t = n;
+  if (p === 'month') f = new Date(n.getFullYear(), n.getMonth(), 1);
+  else if (p === 'last'){ f = new Date(n.getFullYear(), n.getMonth()-1, 1); t = new Date(n.getFullYear(), n.getMonth(), 0); }
+  else if (p === '3m') f = new Date(n.getFullYear(), n.getMonth()-2, 1);
+  else if (p === 'year') f = new Date(n.getFullYear(), 0, 1);
+  else if (p === 'all'){ const ds = S.history.map(h => h.date).sort(); f = ds.length ? parseIso(ds[0]) : new Date(n.getFullYear(), 0, 1); }
+  else return;
+  R_.from = isoDate(f); R_.to = isoDate(t);
+}
+function inRange(){ return S.history.filter(h => h.date >= R_.from && h.date <= R_.to).sort((a, b) => a.date.localeCompare(b.date) || a.ts - b.ts); }
+function aggregate(entries, from, to){
+  const days = Math.round((parseIso(to) - parseIso(from)) / 864e5) + 1;
+  if (days <= 62){
+    const m = new Map();
+    entries.forEach(h => m.set(h.date, (m.get(h.date) || 0) + h.amount));
+    return {mode:'giorno', bars:[...m].map(([d, v]) => { const x = parseIso(d); return {label:`${x.getDate()}/${x.getMonth()+1}`, value:v}; })};
+  }
+  const f = parseIso(from), t = parseIso(to);
+  const months = (t.getFullYear() - f.getFullYear()) * 12 + t.getMonth() - f.getMonth() + 1;
+  if (months <= 36){
+    const bars = [];
+    for (let i = 0; i < months; i++){
+      const d = new Date(f.getFullYear(), f.getMonth() + i, 1), k = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+      bars.push({label:`${MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`, value: sum(entries.filter(h => h.date.startsWith(k)))});
+    }
+    return {mode:'mese', bars};
+  }
+  const bars = [];
+  for (let y = f.getFullYear(); y <= t.getFullYear(); y++) bars.push({label:String(y), value: sum(entries.filter(h => h.date.startsWith(String(y))))});
+  return {mode:'anno', bars};
+}
+function niceMax(v){
+  if (v <= 0) return {max:10, step:2};
+  const raw = v / 4, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw);
+  return {max: Math.ceil(v / step) * step, step};
+}
+function chartSVG(agg){
+  const W = 340, H = 190, L = 40, Rr = 6, T = 14, B = 30, bars = agg.bars;
+  if (!bars.length) return `<svg viewBox="0 0 ${W} 60"><text x="${W/2}" y="34" text-anchor="middle" font-size="13" fill="#7a766c">Nessuna spesa nel periodo</text></svg>`;
+  const {max, step} = niceMax(Math.max(...bars.map(b => b.value)));
+  const iw = W - L - Rr, ih = H - T - B, bw = iw / bars.length, gap = Math.min(bw * 0.28, 10);
+  const every = Math.ceil(bars.length / Math.floor(iw / 34));
+  let s = `<svg viewBox="0 0 ${W} ${H}" font-family="-apple-system,Segoe UI,Roboto,sans-serif">`;
+  for (let v = 0; v <= max + 1e-9; v += step){
+    const y = T + ih - v / max * ih;
+    s += `<line x1="${L}" x2="${W-Rr}" y1="${y}" y2="${y}" stroke="${v ? '#e4e2da' : '#b9b5aa'}" stroke-width="1"/>`;
+    s += `<text x="${L-6}" y="${y+3.5}" text-anchor="end" font-size="10" fill="#7a766c">${Math.round(v)}€</text>`;
+  }
+  bars.forEach((b, i) => {
+    const h = b.value / max * ih, x = L + i * bw + gap / 2, y = T + ih - h;
+    s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, bw - gap).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" rx="${Math.min(3, (bw-gap)/3).toFixed(1)}" fill="#1f3a8a"><title>${b.label}: ${eur(b.value)}</title></rect>`;
+    if (i % every === 0) s += `<text x="${(L + i * bw + bw / 2).toFixed(1)}" y="${H - B + 15}" text-anchor="middle" font-size="10" fill="#4a473f">${esc(b.label)}</text>`;
+  });
+  return s + `</svg>`;
+}
+function renderReport(body){
+  const E = inRange(), tot = sum(E), agg = aggregate(E, R_.from, R_.to);
+  const presets = [['month','Questo mese'],['last','Mese scorso'],['3m','Ultimi 3 mesi'],['year','Quest\'anno'],['all','Tutto']];
+  body.innerHTML = `
+    <div class="chips">${presets.map(([k, l]) => `<button class="chip${R_.preset === k ? ' on' : ''}" data-p="${k}">${l}</button>`).join('')}</div>
+    <div class="dates">
+      <label>Dal<input type="date" id="dFrom" value="${R_.from}" max="${R_.to}"></label>
+      <label>Al<input type="date" id="dTo" value="${R_.to}" min="${R_.from}"></label>
+    </div>
+    <div class="stats three">
+      <div class="stat"><div class="k">Totale</div><div class="v">${eur(tot)}</div></div>
+      <div class="stat"><div class="k">Spese</div><div class="v">${E.length}</div></div>
+      <div class="stat"><div class="k">Media</div><div class="v">${eur(E.length ? tot / E.length : 0)}</div></div>
+    </div>
+    <div class="chart-box"><div class="t">Spesa per ${agg.mode}</div>${chartSVG(agg)}</div>
+    <button class="btn primary" id="btnPdf" style="width:100%${E.length ? '' : ';opacity:.45'}" ${E.length ? '' : 'disabled'}>Scarica il PDF del periodo</button>`;
+  body.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { setPreset(c.dataset.p); renderPanel(); }));
+  const onDate = () => {
+    const f = $('#dFrom').value, t = $('#dTo').value; if (!f || !t) return;
+    R_.preset = 'custom'; R_.from = f <= t ? f : t; R_.to = f <= t ? t : f; renderPanel();
+  };
+  $('#dFrom').addEventListener('change', onDate); $('#dTo').addEventListener('change', onDate);
+  $('#btnPdf').addEventListener('click', () => { if (E.length) makePdf(E, agg); });
+}
+
+/* =========================================================
+   Generatore PDF minimale (vettoriale, nessuna libreria)
+   ========================================================= */
+const HELV = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+const HELVB = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+const WIN = {'€':128,'‚':130,'„':132,'…':133,'‘':145,'’':146,'“':147,'”':148,'•':149,'–':150,'—':151};
+function winBytes(str){
+  const out = [];
+  for (const ch of String(str)){
+    const c = ch.codePointAt(0);
+    if (WIN[ch]) out.push(WIN[ch]);
+    else if (c >= 32 && c < 127) out.push(c);
+    else if (c >= 160 && c <= 255) out.push(c);
+    else if (c === 8239 || c === 160) out.push(32);
+    else out.push(63);
+  }
+  return out;
+}
+function baseOf(b){ // larghezza approssimata per lettere accentate
+  if (b < 127) return b;
+  const map = 'AAAAAAACEEEEIIIIDNOOOOOxOUUUUYPsaaaaaaaceeeeiiiidnooooo/ouuuuypy';
+  if (b >= 192) return map.charCodeAt(b - 192);
+  return b === 128 ? 48 : 46;
+}
+function textW(str, size, bold){
+  const W = bold ? HELVB : HELV;
+  return winBytes(str).reduce((s, b) => s + (W[baseOf(b) - 32] || 556), 0) * size / 1000;
+}
+function pdfStr(str){
+  return '(' + winBytes(str).map(b => b === 40 || b === 41 || b === 92 ? '\\' + String.fromCharCode(b) : b > 126 ? '\\' + b.toString(8).padStart(3, '0') : String.fromCharCode(b)).join('') + ')';
+}
+class MiniPDF {
+  constructor(){ this.W = 595.28; this.H = 841.89; this.pages = []; this.add(); }
+  add(){ this.cur = []; this.pages.push(this.cur); }
+  Y(y){ return (this.H - y).toFixed(2); }
+  rgb(hex){ const n = parseInt(hex.slice(1), 16); return [(n>>16)/255, (n>>8&255)/255, (n&255)/255].map(v => v.toFixed(3)).join(' '); }
+  text(x, y, s, {size=10, bold=false, color='#2b2a27', align='left'}={}){
+    const w = textW(s, size, bold);
+    if (align === 'right') x -= w; else if (align === 'center') x -= w / 2;
+    this.cur.push(`BT ${this.rgb(color)} rg /${bold ? 'F2' : 'F1'} ${size} Tf ${x.toFixed(2)} ${this.Y(y)} Td ${pdfStr(s)} Tj ET`);
+  }
+  rect(x, y, w, h, color){ this.cur.push(`${this.rgb(color)} rg ${x.toFixed(2)} ${this.Y(y + h)} ${w.toFixed(2)} ${h.toFixed(2)} re f`); }
+  line(x1, y1, x2, y2, color, lw=0.6){ this.cur.push(`${this.rgb(color)} RG ${lw} w ${x1.toFixed(2)} ${this.Y(y1)} m ${x2.toFixed(2)} ${this.Y(y2)} l S`); }
+  out(){
+    const objs = [];
+    const n = this.pages.length;
+    objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    const kids = this.pages.map((_, i) => `${5 + i * 2} 0 R`).join(' ');
+    objs[2] = `<< /Type /Pages /Kids [${kids}] /Count ${n} >>`;
+    objs[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+    objs[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+    this.pages.forEach((ops, i) => {
+      const stream = ops.join('\n');
+      objs[5 + i * 2] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${this.W} ${this.H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${6 + i * 2} 0 R >>`;
+      objs[6 + i * 2] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
+    });
+    let s = '%PDF-1.4\n%âãÏÓ\n';
+    const off = [];
+    for (let i = 1; i < objs.length; i++){ off[i] = s.length; s += `${i} 0 obj\n${objs[i]}\nendobj\n`; }
+    const xref = s.length;
+    s += `xref\n0 ${objs.length}\n0000000000 65535 f \n` + off.slice(1).map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');
+    s += `trailer\n<< /Size ${objs.length} /Root 1 0 R /Info << /Producer (Lista della spesa) >> >>\nstartxref\n${xref}\n%%EOF`;
+    const bytes = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i) & 255;
+    return bytes;
+  }
+}
+function buildPdf(E, agg){
+  const P = new MiniPDF(), M = 48, W = P.W - M * 2, INK = '#1f3a8a', MUTED = '#7a766c', LINE = '#dcd9cf';
+  const tot = sum(E);
+  // intestazione
+  P.rect(0, 0, P.W, 6, INK);
+  P.text(M, 62, 'Report spese', {size:24, bold:true, color:INK});
+  P.text(M, 82, `Periodo: ${fmtShort(R_.from)} – ${fmtShort(R_.to)}`, {size:11, color:'#4a473f'});
+  P.text(P.W - M, 62, `Generato il ${fmtShort(today())}`, {size:9, color:MUTED, align:'right'});
+  // riquadri riassuntivi
+  const max = E.reduce((m, h) => Math.max(m, h.amount), 0);
+  const boxes = [['TOTALE SPESO', eur(tot)], ['NUMERO DI SPESE', String(E.length)], ['SPESA MEDIA', eur(E.length ? tot / E.length : 0)], ['SPESA PIÙ ALTA', eur(max)]];
+  const bw = (W - 3 * 10) / 4;
+  boxes.forEach(([k, v], i) => {
+    const x = M + i * (bw + 10), y = 104;
+    P.rect(x, y, bw, 58, '#f3f4f9');
+    P.rect(x, y, 3, 58, INK);
+    P.text(x + 12, y + 20, k, {size:7.5, bold:true, color:MUTED});
+    P.text(x + 12, y + 44, v, {size: v.length > 11 ? 14 : 17, bold:true, color:INK});
+  });
+  // grafico
+  let y0 = 196;
+  P.text(M, y0, `Spesa per ${agg.mode}`, {size:13, bold:true, color:'#2b2a27'});
+  const cx = M + 44, cy = y0 + 18, cw = W - 44, ch = 210;
+  const {max: vmax, step} = niceMax(Math.max(...agg.bars.map(b => b.value), 0));
+  for (let v = 0; v <= vmax + 1e-9; v += step){
+    const y = cy + ch - v / vmax * ch;
+    P.line(cx, y, cx + cw, y, v ? '#e6e4dc' : '#a9a59a', v ? 0.5 : 0.9);
+    P.text(cx - 6, y + 3, `${Math.round(v)} €`, {size:8, color:MUTED, align:'right'});
+  }
+  const n = agg.bars.length, slot = cw / Math.max(n, 1), gap = Math.min(slot * 0.3, 14), barW = Math.min(slot - gap, 46);
+  const every = Math.ceil(n / Math.floor(cw / 36));
+  agg.bars.forEach((b, i) => {
+    const h = b.value / vmax * ch, x = cx + i * slot + (slot - barW) / 2;
+    if (h > 0) P.rect(x, cy + ch - h, barW, h, INK);
+    if (n <= 16 && b.value > 0) P.text(x + barW / 2, cy + ch - h - 4, eur(b.value).replace(/\s?€/, ''), {size:7, color:'#4a473f', align:'center'});
+    if (i % every === 0) P.text(cx + i * slot + slot / 2, cy + ch + 14, b.label, {size:8, color:'#4a473f', align:'center'});
+  });
+  // tabella
+  let y = cy + ch + 52;
+  const header = () => {
+    P.text(M, y, 'Dettaglio spese', {size:13, bold:true, color:'#2b2a27'}); y += 18;
+    P.rect(M, y, W, 20, '#eceef6');
+    P.text(M + 8, y + 13.5, 'DATA', {size:8, bold:true, color:MUTED});
+    P.text(M + 150, y + 13.5, 'ARTICOLI', {size:8, bold:true, color:MUTED});
+    P.text(M + W - 8, y + 13.5, 'IMPORTO', {size:8, bold:true, color:MUTED, align:'right'});
+    y += 20;
+  };
+  header();
+  E.forEach((h, i) => {
+    if (y > P.H - 70){ P.add(); y = 56; header(); }
+    if (i % 2) P.rect(M, y, W, 20, '#f8f7f3');
+    const d = parseIso(h.date).toLocaleDateString('it-IT', {weekday:'short', day:'2-digit', month:'2-digit', year:'numeric'});
+    P.text(M + 8, y + 13.5, d, {size:9.5});
+    let its = h.items && h.items.length ? h.items.join(', ') : '–';
+    while (its.length > 3 && textW(its, 8.5) > W - 150 - 90) its = its.slice(0, -2).trimEnd();
+    if (h.items && its !== h.items.join(', ')) its += '…';
+    P.text(M + 150, y + 13.5, its, {size:8.5, color:'#6b675e'});
+    P.text(M + W - 8, y + 13.5, eur(h.amount), {size:9.5, bold:true, align:'right'});
+    y += 20;
+  });
+  if (y > P.H - 70){ P.add(); y = 56; }
+  P.line(M, y + 4, M + W, y + 4, '#a9a59a', 0.9);
+  P.text(M + 8, y + 20, 'Totale del periodo', {size:10, bold:true});
+  P.text(M + W - 8, y + 20, eur(tot), {size:11, bold:true, color:INK, align:'right'});
+  // piè di pagina
+  P.pages.forEach((pg, i) => {
+    P.cur = pg;
+    P.line(M, P.H - 40, P.W - M, P.H - 40, LINE, 0.5);
+    P.text(M, P.H - 26, 'Lista della spesa · report spese', {size:8, color:MUTED});
+    P.text(P.W - M, P.H - 26, `Pagina ${i + 1} di ${P.pages.length}`, {size:8, color:MUTED, align:'right'});
+  });
+  return P.out();
+}
+async function saveFile(name, data, mime){
+  if (DL){
+    try{ await DL.save({filename: name, data: new Blob([data], {type: mime})}); toast('File salvato'); return; }
+    catch(e){ if (e && e.code === 'declined') return; if (e && e.code === 'rate_limited'){ toast('Attendi un attimo e riprova'); return; } }
+  }
+  const blob = new Blob([data], {type: mime}), file = new File([blob], name, {type: mime});
+  // su telefono, se possibile, apri la condivisione (Salva su File, invia, stampa…)
+  try{
+    if (navigator.canShare && navigator.canShare({files:[file]}) && /Android|iPhone|iPad/i.test(navigator.userAgent)){
+      await navigator.share({files:[file], title: name}); return;
+    }
+  }catch(e){ if (e && e.name === 'AbortError') return; }
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function makePdf(E, agg){
+  const bytes = buildPdf(E, agg);
+  saveFile(`spese_${R_.from}_${R_.to}.pdf`, bytes, 'application/pdf');
+}
+
+/* ---------- backup ---------- */
+function exportBackup(){
+  const data = JSON.stringify({app:'lista-spesa', exported: new Date().toISOString(), state: S}, null, 1);
+  saveFile(`backup_spesa_${today()}.json`, data, 'application/json');
+}
+$('#fileIn').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  let st = null;
+  try{ const j = JSON.parse(await f.text()); st = sane(j.state || j); }catch(err){}
+  if (!st){ toast('File di backup non valido'); return; }
+  const o = openModal(`<h2>Importa backup</h2>
+    <p>Il backup contiene ${st.history.length} spese, ${Object.keys(st.catalog).length} elementi ricordati e ${st.list.length} in lista. Sostituirà i dati attuali su questo dispositivo.</p>
+    <div class="actions"><button class="btn ghost" id="imNo">Annulla</button><button class="btn primary" id="imOk">Sostituisci</button></div>`, {center:true});
+  o.querySelector('#imNo').addEventListener('click', () => closeModal());
+  o.querySelector('#imOk').addEventListener('click', () => {
+    const years = new Set([...S.history, ...st.history].map(h => h.date.slice(0,4)));
+    S = st; migrate(S); persist([...years]); render(); renderPanel(); closeModal(); toast('Backup importato');
+  });
+});
+
+/* =========================================================
+   Avvio
+   ========================================================= */
+if (migrate(S)) persist();
+$('#btnAdd').addEventListener('click', openAdd);
+$('#btnHistory').addEventListener('click', openPanel);
+$('#btnFinish').addEventListener('click', () => openComplete(false));
+render();
+// aggiorna la data se l'app resta aperta oltre la mezzanotte
+setInterval(() => { if (!modalEl) render(); }, 60000);
+</script>
+</body>
+</html>
