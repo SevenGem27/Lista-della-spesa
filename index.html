@@ -176,6 +176,20 @@ ul.list{list-style:none;margin:0;padding:0}
 .sugg button.forget{width:34px;height:34px;border-radius:50%;color:var(--muted);font-size:20px;display:grid;place-items:center}
 .sugg button.forget:active{background:rgba(0,0,0,.06)}
 .mini{font-size:12.5px;color:var(--muted);line-height:1.4;margin:4px 0 10px}
+.title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.link-btn{flex:0 0 auto;display:flex;align-items:center;gap:5px;height:34px;padding:0 12px;border-radius:17px;background:rgba(31,58,138,.08);color:var(--ink);font-weight:600;font-size:13px;margin-top:2px}
+.link-btn svg{width:16px;height:16px}
+.paste-in{width:100%;min-height:110px;max-height:30vh;resize:vertical;border:1.5px dashed rgba(31,58,138,.3);border-radius:12px;background:#fff;padding:10px 12px;
+  font-family:var(--hand);font-size:24px;line-height:1.15;color:var(--ink);outline:none}
+.paste-in:focus{border-color:var(--ink)}
+.paste-in::placeholder{color:rgba(31,58,138,.3)}
+.prev{list-style:none;margin:6px 0 8px;padding:0;max-height:min(34vh,280px);overflow-y:auto}
+.prev li label{display:flex;align-items:center;gap:10px;min-height:42px;border-bottom:1px dashed rgba(31,58,138,.18);cursor:pointer}
+.prev input{width:20px;height:20px;accent-color:var(--ink);flex:0 0 auto}
+.prev .nm{flex:1;font-family:var(--hand);font-size:25px;color:var(--ink);line-height:1.1}
+.prev .cr{font-size:12.5px;color:var(--red);white-space:nowrap}
+.prev .in{font-size:12px;color:var(--muted)}
+.prev li.off .nm{color:rgba(31,58,138,.35)}
 
 /* ---------- storico ---------- */
 .panel{position:fixed;inset:0;z-index:15;display:flex;justify-content:center;background:var(--table);
@@ -876,7 +890,8 @@ function bindStrip(root, id, onPick){
 /* ---------- aggiungi ---------- */
 function openAdd(){
   const o = openModal(`
-    <h2>Aggiungi alla lista</h2>
+    <div class="title-row"><h2>Aggiungi alla lista</h2>
+      <button type="button" class="link-btn" id="toPaste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M9 13h6M9 17h4"/></svg>Incolla lista</button></div>
     <form id="addForm" autocomplete="off">
       <div class="field"><div class="f"><label for="inName">Cosa ti serve?</label>
         <input class="hand-input" id="inName" placeholder="es. latte" enterkeyhint="done" autocapitalize="sentences" autocomplete="off" spellcheck="false"></div></div>
@@ -943,8 +958,85 @@ function openAdd(){
     }
   });
   o.querySelector('#addClose').addEventListener('click', () => closeModal());
+  o.querySelector('#toPaste').addEventListener('click', () => openPaste());
   refresh();
   setTimeout(() => inName.focus(), 60);
+}
+
+/* ---------- incolla una lista ---------- */
+function parseList(text){
+  let lines = String(text || '').replace(/\r/g, '').split('\n');
+  // una sola riga con virgole o punti e virgola: "latte, pane, mele"
+  if (lines.filter(l => l.trim()).length === 1 && /[,;]/.test(lines.join(''))) lines = lines.join('').split(/[,;]/);
+  const out = [], seen = new Set();
+  lines.forEach(l => {
+    let t = l
+      .replace(/^\s*\[[^\]]{4,30}\]\s*[^:]{1,40}:\s*/, '')     // prefisso WhatsApp "[30/10/26, 14:02] Nome:"
+      .replace(/^\s*(?:[-–—•*·▪◦●○☐☑✓✔□■>]+|\[[ xX]?\]|\d{1,3}[.)])\s*/, '')
+      .replace(/^\s*\[[ xX]?\]\s*/, '')
+      .replace(/[\s.;,:]+$/, '')
+      .replace(/\s+/g, ' ').trim();
+    if (!t || t.length > 60 || !/[a-zà-ÿ]/i.test(t)) return;
+    const k = norm(t);
+    if (seen.has(k)) return;
+    seen.add(k); out.push(t);
+  });
+  return out.slice(0, 80);
+}
+function openPaste(){
+  const canClip = !!(navigator.clipboard && navigator.clipboard.readText);
+  const o = openModal(`
+    <h2>Incolla una lista</h2>
+    <div class="mini">Copia una lista da WhatsApp, Note o un messaggio e incollala qui: un elemento per riga oppure separati da virgole.</div>
+    <textarea class="paste-in" id="pasteIn" placeholder="latte&#10;pane&#10;mele" autocapitalize="sentences" spellcheck="false"></textarea>
+    ${canClip ? `<button type="button" class="link-btn" id="pasteClip" style="margin:8px 0 2px">Incolla dagli appunti</button>` : ''}
+    <div class="sugg-title" id="prevTitle"></div>
+    <ul class="prev" id="prev"></ul>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="pasteBack">Indietro</button>
+      <button type="button" class="btn primary" id="pasteOk" disabled style="opacity:.45">Aggiungi</button>
+    </div>`);
+  const ta = o.querySelector('#pasteIn'), prev = o.querySelector('#prev'), ok = o.querySelector('#pasteOk');
+  let rows = [];
+  const inList = () => new Set(S.list.filter(i => !i.done).map(i => i.key));
+  const count = () => {
+    const n = rows.filter(r => r.on && !r.dup).length;
+    ok.disabled = !n; ok.style.opacity = n ? '' : '.45';
+    ok.textContent = n ? `Aggiungi ${n} ${n === 1 ? 'elemento' : 'elementi'}` : 'Aggiungi';
+  };
+  const build = () => {
+    const L = inList(), prevOn = new Map(rows.map(r => [r.key, r.on]));
+    rows = parseList(ta.value).map(name => {
+      const key = norm(name), c = S.catalog[key];
+      const aisle = c ? c.aisle : guessAisle(name);
+      return {name, key, aisle, known: !!c, dup: L.has(key), on: prevOn.has(key) ? prevOn.get(key) : true};
+    });
+    o.querySelector('#prevTitle').textContent = rows.length ? `Trovati ${rows.length} ${rows.length === 1 ? 'elemento' : 'elementi'}` : '';
+    prev.innerHTML = rows.map((r, i) => `<li class="${r.dup || !r.on ? 'off' : ''}"><label>
+        <input type="checkbox" data-i="${i}" ${r.on && !r.dup ? 'checked' : ''} ${r.dup ? 'disabled' : ''}>
+        <span class="nm">${esc(cap(r.name))}</span>
+        ${r.dup ? '<span class="in">già in lista</span>' : r.aisle != null ? `<span class="cr">${esc(aisleLabel(r.aisle))}</span>` : '<span class="in">senza corsia</span>'}
+      </label></li>`).join('');
+    count();
+  };
+  let t; ta.addEventListener('input', () => { clearTimeout(t); t = setTimeout(build, 150); });
+  prev.addEventListener('change', e => {
+    const cb = e.target.closest('input[type=checkbox]'); if (!cb) return;
+    const r = rows[+cb.dataset.i]; r.on = cb.checked; cb.closest('li').classList.toggle('off', !r.on); count();
+  });
+  const clip = o.querySelector('#pasteClip');
+  if (clip) clip.addEventListener('click', async () => {
+    try{ const txt = await navigator.clipboard.readText(); if (txt){ ta.value = txt; build(); } else toast('Gli appunti sono vuoti'); }
+    catch(e){ toast('Tieni premuto nel riquadro e scegli «Incolla»'); ta.focus(); }
+  });
+  o.querySelector('#pasteBack').addEventListener('click', () => openAdd());
+  ok.addEventListener('click', () => {
+    const sel = rows.filter(r => r.on && !r.dup); if (!sel.length) return;
+    sel.forEach(r => addItem(r.name, r.known ? undefined : r.aisle));
+    closeModal(); buzz(12);
+    toast(`${sel.length === 1 ? 'Aggiunto 1 elemento' : `Aggiunti ${sel.length} elementi`} alla lista`);
+  });
+  setTimeout(() => ta.focus(), 80);
 }
 
 /* ---------- modifica elemento ---------- */

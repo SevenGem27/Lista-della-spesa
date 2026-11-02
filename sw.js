@@ -1,5 +1,5 @@
 // Service worker: l'app funziona anche offline, in negozio senza campo.
-const CACHE = 'spesa-v3';
+const CACHE = 'spesa-v4';
 const CORE = ['./', './index.html', './manifest.webmanifest', './firebase-config.js', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
