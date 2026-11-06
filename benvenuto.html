@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lista della spesa: ordinata per corsia, condivisa in famiglia</title>
+<meta name="description" content="Una lista della spesa su carta a quadretti che si ordina da sola per corsia, si condivide in tempo reale con chi fa la spesa con te e funziona anche offline. Gratis, senza pubblicità, senza registrazione.">
+<meta name="theme-color" content="#d8d0c1">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Lista della spesa">
+<meta property="og:description" content="Ordinata per corsia, condivisa in famiglia, funziona anche offline. Gratis e senza registrazione.">
+<meta property="og:image" content="https://sevengem27.github.io/Lista-della-spesa/anteprima.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://sevengem27.github.io/Lista-della-spesa/benvenuto.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --table:#d8d0c1;--paper:#fdfcf7;--grid:rgba(70,120,185,.18);--margin:rgba(214,72,72,.42);
+  --ink:#1f3a8a;--ink-soft:#4a5f9e;--red:#c2412f;--text:#2b2a27;--muted:#6f6b62;--pencil:#f2c230;
+  --hand:'Caveat','Noteworthy','Segoe Print','Bradley Hand',cursive;
+  --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--ui);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased;
+  background:var(--table);
+  background-image:radial-gradient(rgba(255,255,255,.18) 1px,transparent 1.5px),radial-gradient(rgba(0,0,0,.05) 1px,transparent 1.5px);
+  background-size:7px 7px,11px 11px;
+  padding:max(14px,env(safe-area-inset-top)) 12px max(28px,env(safe-area-inset-bottom));}
+a{color:var(--ink)}
+.wrap{max-width:1040px;margin:0 auto}
+
+/* foglio strappato */
+.sheet{position:relative;filter:drop-shadow(0 1px 1px rgba(0,0,0,.16)) drop-shadow(0 8px 18px rgba(60,45,20,.16));margin:0 0 26px}
+.paper{background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:22px 22px;padding:46px clamp(20px,5vw,56px) 40px}
+.paper.margin{background-image:linear-gradient(90deg,transparent 51px,var(--margin) 51px,var(--margin) 53px,transparent 53px),linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100% 100%,22px 22px,22px 22px;padding-left:clamp(70px,9vw,96px)}
+.hand{font-family:var(--hand);font-weight:700;color:var(--ink);line-height:1}
+h1.hand{font-size:clamp(54px,9vw,92px);margin:0 0 10px;letter-spacing:.3px}
+h2.hand{font-size:clamp(38px,5.6vw,52px);margin:0 0 6px}
+h3{font-size:16.5px;margin:0 0 4px;color:var(--text)}
+.lead{font-size:clamp(17px,2.2vw,20px);color:#3f3c35;max-width:34em;margin:0 0 22px}
+.kicker{font-size:15px;color:var(--muted);margin:0 0 22px;max-width:40em}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(20px,4vw,48px);align-items:center}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 22px;border-radius:26px;font:600 16px var(--ui);
+  text-decoration:none;border:0;cursor:pointer;transition:transform .15s}
+.btn:active{transform:scale(.96)}
+.btn svg{width:20px;height:20px}
+.btn.primary{background:var(--ink);color:#fff;box-shadow:0 2px 3px rgba(0,0,0,.15),0 8px 18px rgba(20,30,80,.22)}
+.btn.pencil{background:var(--pencil);color:#3a2c05;box-shadow:0 2px 3px rgba(0,0,0,.12),0 8px 18px rgba(120,90,10,.18)}
+.btn.ghost{background:rgba(31,58,138,.08);color:var(--ink);height:44px;padding:0 16px;font-size:14.5px}
+.free{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--muted);margin:0;padding:0;list-style:none}
+.free li::before{content:"✓ ";color:#2e9e5b;font-weight:700}
+
+/* telefono con demo */
+.phone{justify-self:center;width:min(300px,82vw);aspect-ratio:9/18.5;border-radius:42px;background:#1d1d1f;padding:11px;
+  box-shadow:0 20px 40px rgba(40,30,10,.28),inset 0 0 0 2px #3a3a3c;position:relative;transform:rotate(2deg)}
+.screen{position:relative;height:100%;border-radius:32px;overflow:hidden;background:var(--table)}
+.screen .pg{position:absolute;inset:16px 6px 0;background:var(--paper);
+  background-image:linear-gradient(90deg,transparent 39px,var(--margin) 39px,var(--margin) 41px,transparent 41px),linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100% 100%,18px 18px,18px 18px;padding:26px 10px 0 0}
+.screen .t{font-family:var(--hand);font-weight:700;color:var(--ink);font-size:29px;padding-left:50px;line-height:1}
+.screen .s{font-family:var(--hand);color:var(--ink-soft);font-size:17px;padding-left:50px;margin-bottom:6px}
+.demo{list-style:none;margin:0;padding:0}
+.demo li{position:relative;display:flex;align-items:center;min-height:36px;padding-left:50px;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.demo .a{position:absolute;left:4px;width:38px;text-align:center;font-family:var(--hand);font-weight:700;color:var(--red);font-size:16px;transform:rotate(-4deg)}
+.demo .a::before{content:"";position:absolute;inset:-3px 2px;border:1.5px solid currentColor;border-radius:50%;opacity:.7}
+.demo .a.n{font-size:19px}
+.demo .x{position:relative;font-family:var(--hand);font-weight:500;font-size:25px;color:var(--ink);transition:color .25s}
+.demo .x::after{content:"";position:absolute;left:-4px;right:-4px;top:54%;height:2.5px;border-radius:2px;background:var(--ink);transform-origin:left;transform:rotate(-2deg) scaleX(0);transition:transform .28s cubic-bezier(.6,.05,.3,1)}
+.demo li.done .x{color:rgba(31,58,138,.42)}
+.demo li.done .x::after{transform:rotate(-2deg) scaleX(1)}
+.screen .bar{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:space-between;align-items:flex-end;padding:0 14px}
+.screen .bar span{display:grid;place-items:center;border-radius:50%;width:40px;height:40px;background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.screen .bar .p{width:48px;height:48px;background:var(--pencil);color:#3a2c05}
+.screen .bar .c{width:auto;height:38px;border-radius:19px;padding:0 14px;background:var(--ink);color:#fff;font-size:12px;font-weight:600}
+.screen .bar svg{width:20px;height:20px}
+.done-msg{position:absolute;left:12px;right:12px;bottom:72px;background:#2b2a27;color:#fff;font-size:13px;border-radius:14px;padding:10px 12px;text-align:center;
+  opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none}
+.done-msg.show{opacity:1;transform:none}
+.tap-hint{text-align:center;font-family:var(--hand);font-size:22px;color:var(--ink-soft);margin-top:14px;transform:rotate(-2deg)}
+
+/* funzioni */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.feat{background:rgba(255,255,255,.88);border:1px solid rgba(31,58,138,.13);border-radius:16px;padding:16px 16px 14px}
+.feat .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(31,58,138,.08);color:var(--ink);margin-bottom:10px}
+.feat .ic.r{background:rgba(194,65,47,.1);color:var(--red)}
+.feat .ic.y{background:rgba(242,194,48,.25);color:#7a5a00}
+.feat .ic svg{width:24px;height:24px}
+.feat p{margin:0;font-size:14.5px;color:#4a473f}
+
+/* installazione */
+.install{display:grid;grid-template-columns:1fr 250px;gap:28px;align-items:start}
+.tabs{display:inline-flex;background:rgba(31,58,138,.08);border-radius:12px;padding:4px;margin:0 0 16px}
+.tabs button{border:0;background:none;height:38px;padding:0 18px;border-radius:9px;font:600 14.5px var(--ui);color:var(--ink-soft);cursor:pointer}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+ol.steps{list-style:none;counter-reset:s;margin:0;padding:0}
+ol.steps li{counter-increment:s;position:relative;padding:4px 0 14px 50px;min-height:44px}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:36px;height:36px;display:grid;place-items:center;
+  font-family:var(--hand);font-weight:700;font-size:24px;color:var(--red);border:1.5px solid rgba(194,65,47,.55);border-radius:50%;transform:rotate(-5deg)}
+ol.steps b{color:var(--text)}
+.kbd{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid rgba(0,0,0,.14);border-radius:7px;padding:0 7px;font-size:13.5px;font-weight:600;white-space:nowrap;vertical-align:1px}
+.kbd svg{width:14px;height:14px}
+.panel[hidden]{display:none}
+.note{background:rgba(242,194,48,.18);border-left:3px solid var(--pencil);border-radius:0 10px 10px 0;padding:10px 14px;font-size:14px;color:#4a473f;margin-top:4px}
+.qr{background:#fff;border:1px solid rgba(31,58,138,.15);border-radius:16px;padding:16px;text-align:center}
+.qr svg{width:100%;height:auto;display:block}
+.qr p{margin:10px 0 0;font-size:13.5px;color:var(--muted)}
+.qr .hand{font-size:24px;margin-bottom:8px}
+
+/* condivisione */
+.share-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
+.card{background:rgba(255,255,255,.88);border:1px solid rgba(31,58,138,.13);border-radius:16px;padding:16px}
+.card .num{font-family:var(--hand);font-weight:700;font-size:34px;color:var(--red);line-height:1;margin-bottom:6px}
+.card p{margin:0;font-size:14.5px;color:#4a473f}
+.code{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;letter-spacing:1px;color:var(--ink);background:#fff;border:1.5px dashed rgba(31,58,138,.35);border-radius:8px;padding:1px 6px;font-size:13px}
+
+/* buono a sapersi */
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:6px 34px}
+details{border-bottom:1px dashed rgba(31,58,138,.25);padding:10px 0}
+summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--hand);font-size:28px;line-height:.8;color:var(--red);transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{margin:8px 0 2px;font-size:14.5px;color:#4a473f}
+
+/* chiusura */
+.final{text-align:center}
+.final .cta{justify-content:center}
+footer{text-align:center;font-size:13px;color:var(--muted);padding:6px 0 10px}
+.toast{position:fixed;left:50%;bottom:max(22px,env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:#2b2a27;color:#fff;padding:10px 16px;border-radius:22px;font-size:14px;transition:.25s;pointer-events:none;z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr}
+  .phone{transform:none;width:min(280px,78vw)}
+  .features,.share-grid{grid-template-columns:1fr 1fr}
+  .install{grid-template-columns:1fr}
+  .qr{display:none}
+  .faq{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .features,.share-grid{grid-template-columns:1fr}
+  .paper.margin{padding-left:62px;background-image:linear-gradient(90deg,transparent 43px,var(--margin) 43px,var(--margin) 45px,transparent 45px),linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px)}
+  .cta .btn{flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- apertura -->
+  <section class="sheet"><div class="paper margin">
+    <div class="hero">
+      <div>
+        <h1 class="hand">Lista della spesa</h1>
+        <p class="lead">Il foglietto a quadretti di sempre, ma più furbo: la lista <b>si ordina da sola per corsia</b>, si <b>condivide in tempo reale</b> con chi fa la spesa con te e ti dice quanto spendi ogni mese.</p>
+        <div class="cta">
+          <a class="btn primary" href="./">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4.5 1.5L5 15 16.5 3.5z"/></svg>
+            Apri l'app</a>
+          <button class="btn pencil" id="shareTop" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/></svg>
+            Mandala a qualcuno</button>
+        </div>
+        <ul class="free"><li>Gratis</li><li>Senza pubblicità</li><li>Senza registrazione</li><li>Funziona offline</li></ul>
+      </div>
+      <div>
+        <div class="phone" aria-label="Prova: tocca gli elementi per depennarli">
+          <div class="screen">
+            <div class="pg">
+              <div class="t">Lista della spesa</div>
+              <div class="s" id="demoSub">7 da prendere</div>
+              <ul class="demo" id="demo">
+                <li><span class="a">F&amp;V</span><span class="x">Banane</span></li>
+                <li><span class="a n">1</span><span class="x">Latte</span></li>
+                <li><span class="a">pesce</span><span class="x">Salmone</span></li>
+                <li><span class="a">pane</span><span class="x">Focaccia</span></li>
+                <li><span class="a n">4</span><span class="x">Passata</span></li>
+                <li><span class="a n">6</span><span class="x">Biscotti</span></li>
+                <li><span class="a n">13</span><span class="x">Detersivo</span></li>
+              </ul>
+            </div>
+            <div class="done-msg" id="doneMsg">Spesa completata! Ora ti chiede quanto hai speso e la salva nello storico.</div>
+            <div class="bar">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7.5V12l3 2"/></svg></span>
+              <span class="c">Concludi</span>
+              <span class="p"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4.5 1.5L5 15 16.5 3.5z"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="tap-hint">↑ provala: tocca per depennare</div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- funzioni -->
+  <section class="sheet"><div class="paper">
+    <h2 class="hand">Cosa sa fare</h2>
+    <p class="kicker">Niente menu infiniti: una matita per aggiungere, un tocco per depennare, un pulsante per chiudere la spesa.</p>
+    <div class="features">
+      <div class="feat"><div class="ic r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/><path d="m17 15 3 3-3 3"/></svg></div>
+        <h3>In ordine di corsia</h3><p>Associ a ogni prodotto la sua corsia o il reparto una volta sola: da lì in poi la lista segue il tuo giro nel supermercato.</p></div>
+      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.5c2.4 0 4 1.4 4.5 4"/></svg></div>
+        <h3>Condivisa in famiglia</h3><p>Uno scrive il latte a casa, l'altro lo vede comparire al supermercato. Ogni modifica arriva sull'altro telefono in un attimo.</p></div>
+      <div class="feat"><div class="ic y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4.5 1.5L5 15 16.5 3.5z"/><path d="m14.5 5.5 3 3"/></svg></div>
+        <h3>Si ricorda tutto</h3><p>Mentre scrivi ti suggerisce quello che hai già comprato, con la corsia già pronta. Per i prodotti nuovi la propone lei.</p></div>
+      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M9 13h6M9 17h4"/></svg></div>
+        <h3>Incolla una lista</h3><p>Ti hanno scritto la spesa su WhatsApp? Copiala e incollala: l'app la divide in elementi e li aggiunge tutti insieme.</p></div>
+      <div class="feat"><div class="ic r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+        <h3>Quanto spendi</h3><p>A fine spesa scrivi l'importo: lo storico mostra i totali del mese e dell'anno, e puoi scaricare un PDF con il grafico del periodo che vuoi.</p></div>
+      <div class="feat"><div class="ic y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a15 15 0 0 1 20 0"/><path d="M5.5 12a10 10 0 0 1 13 0"/><path d="M9 15.5a5 5 0 0 1 6 0"/><path d="M3 3l18 18"/></svg></div>
+        <h3>Anche senza campo</h3><p>Nei supermercati il segnale va e viene: l'app funziona lo stesso e sincronizza appena torna la rete.</p></div>
+    </div>
+  </div></section>
+
+  <!-- installazione -->
+  <section class="sheet" id="installa"><div class="paper margin">
+    <h2 class="hand">Installala in 30 secondi</h2>
+    <p class="kicker">Non serve passare dall'App Store o dal Play Store: si aggiunge alla schermata Home direttamente dal browser e da lì si apre come una normale app.</p>
+    <div class="install">
+      <div>
+        <div class="tabs" role="tablist">
+          <button type="button" id="tIos" class="on" role="tab">iPhone</button>
+          <button type="button" id="tAnd" role="tab">Android</button>
+        </div>
+        <div class="panel" id="pIos">
+          <ol class="steps">
+            <li>Apri <a href="./"><b>il link dell'app</b></a> con <b>Safari</b> (con altri browser su iPhone l'installazione può non funzionare).</li>
+            <li>Tocca il pulsante <span class="kbd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>Condividi</span> nella barra in basso.</li>
+            <li>Scorri e scegli <span class="kbd">Aggiungi alla schermata Home</span>, poi <b>Aggiungi</b>.</li>
+            <li>D'ora in poi aprila <b>sempre dall'icona</b> con la matita.</li>
+          </ol>
+          <div class="note">Su iPhone l'app installata e Safari tengono i dati separati: quello che scrivi aprendo il sito in Safari non lo ritrovi nell'icona, e viceversa.</div>
+        </div>
+        <div class="panel" id="pAnd" hidden>
+          <ol class="steps">
+            <li>Apri <a href="./"><b>il link dell'app</b></a> con <b>Chrome</b>.</li>
+            <li>Tocca il menu <span class="kbd">⋮</span> in alto a destra.</li>
+            <li>Scegli <span class="kbd">Installa app</span> (o <span class="kbd">Aggiungi a schermata Home</span>) e conferma.</li>
+            <li>Trovi l'icona con la matita tra le tue app: aprila sempre da lì.</li>
+          </ol>
+        </div>
+      </div>
+      <aside class="qr">
+        <div class="hand">Sei al computer?</div>
+        <svg role="img" aria-label="QR code dell'app" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 35" shape-rendering="crispEdges"><rect width="35" height="35" fill="#fff"/><g fill="#1f3a8a"><rect x="1" y="1" width="1.02" height="1.02"/><rect x="2" y="1" width="1.02" height="1.02"/><rect x="3" y="1" width="1.02" height="1.02"/><rect x="4" y="1" width="1.02" height="1.02"/><rect x="5" y="1" width="1.02" height="1.02"/><rect x="6" y="1" width="1.02" height="1.02"/><rect x="7" y="1" width="1.02" height="1.02"/><rect x="9" y="1" width="1.02" height="1.02"/><rect x="10" y="1" width="1.02" height="1.02"/><rect x="11" y="1" width="1.02" height="1.02"/><rect x="12" y="1" width="1.02" height="1.02"/><rect x="16" y="1" width="1.02" height="1.02"/><rect x="17" y="1" width="1.02" height="1.02"/><rect x="20" y="1" width="1.02" height="1.02"/><rect x="21" y="1" width="1.02" height="1.02"/><rect x="22" y="1" width="1.02" height="1.02"/><rect x="24" y="1" width="1.02" height="1.02"/><rect x="27" y="1" width="1.02" height="1.02"/><rect x="28" y="1" width="1.02" height="1.02"/><rect x="29" y="1" width="1.02" height="1.02"/><rect x="30" y="1" width="1.02" height="1.02"/><rect x="31" y="1" width="1.02" height="1.02"/><rect x="32" y="1" width="1.02" height="1.02"/><rect x="33" y="1" width="1.02" height="1.02"/><rect x="1" y="2" width="1.02" height="1.02"/><rect x="7" y="2" width="1.02" height="1.02"/><rect x="9" y="2" width="1.02" height="1.02"/><rect x="10" y="2" width="1.02" height="1.02"/><rect x="15" y="2" width="1.02" height="1.02"/><rect x="17" y="2" width="1.02" height="1.02"/><rect x="18" y="2" width="1.02" height="1.02"/><rect x="22" y="2" width="1.02" height="1.02"/><rect x="24" y="2" width="1.02" height="1.02"/><rect x="27" y="2" width="1.02" height="1.02"/><rect x="33" y="2" width="1.02" height="1.02"/><rect x="1" y="3" width="1.02" height="1.02"/><rect x="3" y="3" width="1.02" height="1.02"/><rect x="4" y="3" width="1.02" height="1.02"/><rect x="5" y="3" width="1.02" height="1.02"/><rect x="7" y="3" width="1.02" height="1.02"/><rect x="11" y="3" width="1.02" height="1.02"/><rect x="12" y="3" width="1.02" height="1.02"/><rect x="13" y="3" width="1.02" height="1.02"/><rect x="14" y="3" width="1.02" height="1.02"/><rect x="15" y="3" width="1.02" height="1.02"/><rect x="16" y="3" width="1.02" height="1.02"/><rect x="19" y="3" width="1.02" height="1.02"/><rect x="20" y="3" width="1.02" height="1.02"/><rect x="24" y="3" width="1.02" height="1.02"/><rect x="25" y="3" width="1.02" height="1.02"/><rect x="27" y="3" width="1.02" height="1.02"/><rect x="29" y="3" width="1.02" height="1.02"/><rect x="30" y="3" width="1.02" height="1.02"/><rect x="31" y="3" width="1.02" height="1.02"/><rect x="33" y="3" width="1.02" height="1.02"/><rect x="1" y="4" width="1.02" height="1.02"/><rect x="3" y="4" width="1.02" height="1.02"/><rect x="4" y="4" width="1.02" height="1.02"/><rect x="5" y="4" width="1.02" height="1.02"/><rect x="7" y="4" width="1.02" height="1.02"/><rect x="9" y="4" width="1.02" height="1.02"/><rect x="11" y="4" width="1.02" height="1.02"/><rect x="19" y="4" width="1.02" height="1.02"/><rect x="20" y="4" width="1.02" height="1.02"/><rect x="23" y="4" width="1.02" height="1.02"/><rect x="24" y="4" width="1.02" height="1.02"/><rect x="27" y="4" width="1.02" height="1.02"/><rect x="29" y="4" width="1.02" height="1.02"/><rect x="30" y="4" width="1.02" height="1.02"/><rect x="31" y="4" width="1.02" height="1.02"/><rect x="33" y="4" width="1.02" height="1.02"/><rect x="1" y="5" width="1.02" height="1.02"/><rect x="3" y="5" width="1.02" height="1.02"/><rect x="4" y="5" width="1.02" height="1.02"/><rect x="5" y="5" width="1.02" height="1.02"/><rect x="7" y="5" width="1.02" height="1.02"/><rect x="10" y="5" width="1.02" height="1.02"/><rect x="14" y="5" width="1.02" height="1.02"/><rect x="17" y="5" width="1.02" height="1.02"/><rect x="18" y="5" width="1.02" height="1.02"/><rect x="19" y="5" width="1.02" height="1.02"/><rect x="25" y="5" width="1.02" height="1.02"/><rect x="27" y="5" width="1.02" height="1.02"/><rect x="29" y="5" width="1.02" height="1.02"/><rect x="30" y="5" width="1.02" height="1.02"/><rect x="31" y="5" width="1.02" height="1.02"/><rect x="33" y="5" width="1.02" height="1.02"/><rect x="1" y="6" width="1.02" height="1.02"/><rect x="7" y="6" width="1.02" height="1.02"/><rect x="10" y="6" width="1.02" height="1.02"/><rect x="11" y="6" width="1.02" height="1.02"/><rect x="12" y="6" width="1.02" height="1.02"/><rect x="14" y="6" width="1.02" height="1.02"/><rect x="15" y="6" width="1.02" height="1.02"/><rect x="16" y="6" width="1.02" height="1.02"/><rect x="17" y="6" width="1.02" height="1.02"/><rect x="19" y="6" width="1.02" height="1.02"/><rect x="22" y="6" width="1.02" height="1.02"/><rect x="25" y="6" width="1.02" height="1.02"/><rect x="27" y="6" width="1.02" height="1.02"/><rect x="33" y="6" width="1.02" height="1.02"/><rect x="1" y="7" width="1.02" height="1.02"/><rect x="2" y="7" width="1.02" height="1.02"/><rect x="3" y="7" width="1.02" height="1.02"/><rect x="4" y="7" width="1.02" height="1.02"/><rect x="5" y="7" width="1.02" height="1.02"/><rect x="6" y="7" width="1.02" height="1.02"/><rect x="7" y="7" width="1.02" height="1.02"/><rect x="9" y="7" width="1.02" height="1.02"/><rect x="11" y="7" width="1.02" height="1.02"/><rect x="13" y="7" width="1.02" height="1.02"/><rect x="15" y="7" width="1.02" height="1.02"/><rect x="17" y="7" width="1.02" height="1.02"/><rect x="19" y="7" width="1.02" height="1.02"/><rect x="21" y="7" width="1.02" height="1.02"/><rect x="23" y="7" width="1.02" height="1.02"/><rect x="25" y="7" width="1.02" height="1.02"/><rect x="27" y="7" width="1.02" height="1.02"/><rect x="28" y="7" width="1.02" height="1.02"/><rect x="29" y="7" width="1.02" height="1.02"/><rect x="30" y="7" width="1.02" height="1.02"/><rect x="31" y="7" width="1.02" height="1.02"/><rect x="32" y="7" width="1.02" height="1.02"/><rect x="33" y="7" width="1.02" height="1.02"/><rect x="9" y="8" width="1.02" height="1.02"/><rect x="11" y="8" width="1.02" height="1.02"/><rect x="15" y="8" width="1.02" height="1.02"/><rect x="16" y="8" width="1.02" height="1.02"/><rect x="17" y="8" width="1.02" height="1.02"/><rect x="18" y="8" width="1.02" height="1.02"/><rect x="20" y="8" width="1.02" height="1.02"/><rect x="23" y="8" width="1.02" height="1.02"/><rect x="24" y="8" width="1.02" height="1.02"/><rect x="25" y="8" width="1.02" height="1.02"/><rect x="1" y="9" width="1.02" height="1.02"/><rect x="3" y="9" width="1.02" height="1.02"/><rect x="4" y="9" width="1.02" height="1.02"/><rect x="6" y="9" width="1.02" height="1.02"/><rect x="7" y="9" width="1.02" height="1.02"/><rect x="8" y="9" width="1.02" height="1.02"/><rect x="11" y="9" width="1.02" height="1.02"/><rect x="12" y="9" width="1.02" height="1.02"/><rect x="15" y="9" width="1.02" height="1.02"/><rect x="16" y="9" width="1.02" height="1.02"/><rect x="17" y="9" width="1.02" height="1.02"/><rect x="18" y="9" width="1.02" height="1.02"/><rect x="19" y="9" width="1.02" height="1.02"/><rect x="22" y="9" width="1.02" height="1.02"/><rect x="27" y="9" width="1.02" height="1.02"/><rect x="30" y="9" width="1.02" height="1.02"/><rect x="32" y="9" width="1.02" height="1.02"/><rect x="33" y="9" width="1.02" height="1.02"/><rect x="1" y="10" width="1.02" height="1.02"/><rect x="2" y="10" width="1.02" height="1.02"/><rect x="3" y="10" width="1.02" height="1.02"/><rect x="4" y="10" width="1.02" height="1.02"/><rect x="5" y="10" width="1.02" height="1.02"/><rect x="8" y="10" width="1.02" height="1.02"/><rect x="9" y="10" width="1.02" height="1.02"/><rect x="10" y="10" width="1.02" height="1.02"/><rect x="14" y="10" width="1.02" height="1.02"/><rect x="18" y="10" width="1.02" height="1.02"/><rect x="19" y="10" width="1.02" height="1.02"/><rect x="20" y="10" width="1.02" height="1.02"/><rect x="21" y="10" width="1.02" height="1.02"/><rect x="22" y="10" width="1.02" height="1.02"/><rect x="24" y="10" width="1.02" height="1.02"/><rect x="27" y="10" width="1.02" height="1.02"/><rect x="28" y="10" width="1.02" height="1.02"/><rect x="30" y="10" width="1.02" height="1.02"/><rect x="31" y="10" width="1.02" height="1.02"/><rect x="33" y="10" width="1.02" height="1.02"/><rect x="4" y="11" width="1.02" height="1.02"/><rect x="5" y="11" width="1.02" height="1.02"/><rect x="7" y="11" width="1.02" height="1.02"/><rect x="8" y="11" width="1.02" height="1.02"/><rect x="9" y="11" width="1.02" height="1.02"/><rect x="11" y="11" width="1.02" height="1.02"/><rect x="12" y="11" width="1.02" height="1.02"/><rect x="13" y="11" width="1.02" height="1.02"/><rect x="14" y="11" width="1.02" height="1.02"/><rect x="17" y="11" width="1.02" height="1.02"/><rect x="19" y="11" width="1.02" height="1.02"/><rect x="24" y="11" width="1.02" height="1.02"/><rect x="25" y="11" width="1.02" height="1.02"/><rect x="26" y="11" width="1.02" height="1.02"/><rect x="28" y="11" width="1.02" height="1.02"/><rect x="29" y="11" width="1.02" height="1.02"/><rect x="30" y="11" width="1.02" height="1.02"/><rect x="32" y="11" width="1.02" height="1.02"/><rect x="33" y="11" width="1.02" height="1.02"/><rect x="2" y="12" width="1.02" height="1.02"/><rect x="3" y="12" width="1.02" height="1.02"/><rect x="4" y="12" width="1.02" height="1.02"/><rect x="8" y="12" width="1.02" height="1.02"/><rect x="16" y="12" width="1.02" height="1.02"/><rect x="18" y="12" width="1.02" height="1.02"/><rect x="21" y="12" width="1.02" height="1.02"/><rect x="25" y="12" width="1.02" height="1.02"/><rect x="26" y="12" width="1.02" height="1.02"/><rect x="28" y="12" width="1.02" height="1.02"/><rect x="30" y="12" width="1.02" height="1.02"/><rect x="32" y="12" width="1.02" height="1.02"/><rect x="2" y="13" width="1.02" height="1.02"/><rect x="3" y="13" width="1.02" height="1.02"/><rect x="4" y="13" width="1.02" height="1.02"/><rect x="6" y="13" width="1.02" height="1.02"/><rect x="7" y="13" width="1.02" height="1.02"/><rect x="9" y="13" width="1.02" height="1.02"/><rect x="10" y="13" width="1.02" height="1.02"/><rect x="13" y="13" width="1.02" height="1.02"/><rect x="15" y="13" width="1.02" height="1.02"/><rect x="17" y="13" width="1.02" height="1.02"/><rect x="21" y="13" width="1.02" height="1.02"/><rect x="25" y="13" width="1.02" height="1.02"/><rect x="26" y="13" width="1.02" height="1.02"/><rect x="28" y="13" width="1.02" height="1.02"/><rect x="29" y="13" width="1.02" height="1.02"/><rect x="30" y="13" width="1.02" height="1.02"/><rect x="32" y="13" width="1.02" height="1.02"/><rect x="1" y="14" width="1.02" height="1.02"/><rect x="3" y="14" width="1.02" height="1.02"/><rect x="4" y="14" width="1.02" height="1.02"/><rect x="6" y="14" width="1.02" height="1.02"/><rect x="10" y="14" width="1.02" height="1.02"/><rect x="11" y="14" width="1.02" height="1.02"/><rect x="13" y="14" width="1.02" height="1.02"/><rect x="15" y="14" width="1.02" height="1.02"/><rect x="21" y="14" width="1.02" height="1.02"/><rect x="25" y="14" width="1.02" height="1.02"/><rect x="28" y="14" width="1.02" height="1.02"/><rect x="30" y="14" width="1.02" height="1.02"/><rect x="32" y="14" width="1.02" height="1.02"/><rect x="2" y="15" width="1.02" height="1.02"/><rect x="5" y="15" width="1.02" height="1.02"/><rect x="7" y="15" width="1.02" height="1.02"/><rect x="8" y="15" width="1.02" height="1.02"/><rect x="9" y="15" width="1.02" height="1.02"/><rect x="10" y="15" width="1.02" height="1.02"/><rect x="11" y="15" width="1.02" height="1.02"/><rect x="13" y="15" width="1.02" height="1.02"/><rect x="14" y="15" width="1.02" height="1.02"/><rect x="15" y="15" width="1.02" height="1.02"/><rect x="20" y="15" width="1.02" height="1.02"/><rect x="21" y="15" width="1.02" height="1.02"/><rect x="27" y="15" width="1.02" height="1.02"/><rect x="29" y="15" width="1.02" height="1.02"/><rect x="30" y="15" width="1.02" height="1.02"/><rect x="1" y="16" width="1.02" height="1.02"/><rect x="2" y="16" width="1.02" height="1.02"/><rect x="3" y="16" width="1.02" height="1.02"/><rect x="4" y="16" width="1.02" height="1.02"/><rect x="5" y="16" width="1.02" height="1.02"/><rect x="6" y="16" width="1.02" height="1.02"/><rect x="11" y="16" width="1.02" height="1.02"/><rect x="13" y="16" width="1.02" height="1.02"/><rect x="14" y="16" width="1.02" height="1.02"/><rect x="16" y="16" width="1.02" height="1.02"/><rect x="19" y="16" width="1.02" height="1.02"/><rect x="22" y="16" width="1.02" height="1.02"/><rect x="23" y="16" width="1.02" height="1.02"/><rect x="25" y="16" width="1.02" height="1.02"/><rect x="26" y="16" width="1.02" height="1.02"/><rect x="27" y="16" width="1.02" height="1.02"/><rect x="29" y="16" width="1.02" height="1.02"/><rect x="31" y="16" width="1.02" height="1.02"/><rect x="1" y="17" width="1.02" height="1.02"/><rect x="2" y="17" width="1.02" height="1.02"/><rect x="7" y="17" width="1.02" height="1.02"/><rect x="8" y="17" width="1.02" height="1.02"/><rect x="10" y="17" width="1.02" height="1.02"/><rect x="12" y="17" width="1.02" height="1.02"/><rect x="13" y="17" width="1.02" height="1.02"/><rect x="19" y="17" width="1.02" height="1.02"/><rect x="21" y="17" width="1.02" height="1.02"/><rect x="22" y="17" width="1.02" height="1.02"/><rect x="23" y="17" width="1.02" height="1.02"/><rect x="24" y="17" width="1.02" height="1.02"/><rect x="26" y="17" width="1.02" height="1.02"/><rect x="27" y="17" width="1.02" height="1.02"/><rect x="29" y="17" width="1.02" height="1.02"/><rect x="30" y="17" width="1.02" height="1.02"/><rect x="31" y="17" width="1.02" height="1.02"/><rect x="2" y="18" width="1.02" height="1.02"/><rect x="3" y="18" width="1.02" height="1.02"/><rect x="4" y="18" width="1.02" height="1.02"/><rect x="11" y="18" width="1.02" height="1.02"/><rect x="12" y="18" width="1.02" height="1.02"/><rect x="13" y="18" width="1.02" height="1.02"/><rect x="14" y="18" width="1.02" height="1.02"/><rect x="16" y="18" width="1.02" height="1.02"/><rect x="19" y="18" width="1.02" height="1.02"/><rect x="21" y="18" width="1.02" height="1.02"/><rect x="22" y="18" width="1.02" height="1.02"/><rect x="23" y="18" width="1.02" height="1.02"/><rect x="24" y="18" width="1.02" height="1.02"/><rect x="25" y="18" width="1.02" height="1.02"/><rect x="27" y="18" width="1.02" height="1.02"/><rect x="29" y="18" width="1.02" height="1.02"/><rect x="30" y="18" width="1.02" height="1.02"/><rect x="33" y="18" width="1.02" height="1.02"/><rect x="1" y="19" width="1.02" height="1.02"/><rect x="3" y="19" width="1.02" height="1.02"/><rect x="4" y="19" width="1.02" height="1.02"/><rect x="5" y="19" width="1.02" height="1.02"/><rect x="7" y="19" width="1.02" height="1.02"/><rect x="8" y="19" width="1.02" height="1.02"/><rect x="9" y="19" width="1.02" height="1.02"/><rect x="10" y="19" width="1.02" height="1.02"/><rect x="14" y="19" width="1.02" height="1.02"/><rect x="16" y="19" width="1.02" height="1.02"/><rect x="17" y="19" width="1.02" height="1.02"/><rect x="19" y="19" width="1.02" height="1.02"/><rect x="23" y="19" width="1.02" height="1.02"/><rect x="25" y="19" width="1.02" height="1.02"/><rect x="28" y="19" width="1.02" height="1.02"/><rect x="29" y="19" width="1.02" height="1.02"/><rect x="31" y="19" width="1.02" height="1.02"/><rect x="32" y="19" width="1.02" height="1.02"/><rect x="3" y="20" width="1.02" height="1.02"/><rect x="4" y="20" width="1.02" height="1.02"/><rect x="6" y="20" width="1.02" height="1.02"/><rect x="8" y="20" width="1.02" height="1.02"/><rect x="14" y="20" width="1.02" height="1.02"/><rect x="15" y="20" width="1.02" height="1.02"/><rect x="18" y="20" width="1.02" height="1.02"/><rect x="19" y="20" width="1.02" height="1.02"/><rect x="20" y="20" width="1.02" height="1.02"/><rect x="23" y="20" width="1.02" height="1.02"/><rect x="25" y="20" width="1.02" height="1.02"/><rect x="26" y="20" width="1.02" height="1.02"/><rect x="27" y="20" width="1.02" height="1.02"/><rect x="29" y="20" width="1.02" height="1.02"/><rect x="32" y="20" width="1.02" height="1.02"/><rect x="1" y="21" width="1.02" height="1.02"/><rect x="3" y="21" width="1.02" height="1.02"/><rect x="6" y="21" width="1.02" height="1.02"/><rect x="7" y="21" width="1.02" height="1.02"/><rect x="8" y="21" width="1.02" height="1.02"/><rect x="12" y="21" width="1.02" height="1.02"/><rect x="14" y="21" width="1.02" height="1.02"/><rect x="16" y="21" width="1.02" height="1.02"/><rect x="17" y="21" width="1.02" height="1.02"/><rect x="23" y="21" width="1.02" height="1.02"/><rect x="25" y="21" width="1.02" height="1.02"/><rect x="26" y="21" width="1.02" height="1.02"/><rect x="30" y="21" width="1.02" height="1.02"/><rect x="31" y="21" width="1.02" height="1.02"/><rect x="32" y="21" width="1.02" height="1.02"/><rect x="1" y="22" width="1.02" height="1.02"/><rect x="4" y="22" width="1.02" height="1.02"/><rect x="5" y="22" width="1.02" height="1.02"/><rect x="9" y="22" width="1.02" height="1.02"/><rect x="10" y="22" width="1.02" height="1.02"/><rect x="11" y="22" width="1.02" height="1.02"/><rect x="15" y="22" width="1.02" height="1.02"/><rect x="16" y="22" width="1.02" height="1.02"/><rect x="17" y="22" width="1.02" height="1.02"/><rect x="21" y="22" width="1.02" height="1.02"/><rect x="24" y="22" width="1.02" height="1.02"/><rect x="27" y="22" width="1.02" height="1.02"/><rect x="30" y="22" width="1.02" height="1.02"/><rect x="33" y="22" width="1.02" height="1.02"/><rect x="3" y="23" width="1.02" height="1.02"/><rect x="5" y="23" width="1.02" height="1.02"/><rect x="6" y="23" width="1.02" height="1.02"/><rect x="7" y="23" width="1.02" height="1.02"/><rect x="8" y="23" width="1.02" height="1.02"/><rect x="10" y="23" width="1.02" height="1.02"/><rect x="12" y="23" width="1.02" height="1.02"/><rect x="14" y="23" width="1.02" height="1.02"/><rect x="15" y="23" width="1.02" height="1.02"/><rect x="16" y="23" width="1.02" height="1.02"/><rect x="18" y="23" width="1.02" height="1.02"/><rect x="19" y="23" width="1.02" height="1.02"/><rect x="20" y="23" width="1.02" height="1.02"/><rect x="21" y="23" width="1.02" height="1.02"/><rect x="23" y="23" width="1.02" height="1.02"/><rect x="24" y="23" width="1.02" height="1.02"/><rect x="25" y="23" width="1.02" height="1.02"/><rect x="27" y="23" width="1.02" height="1.02"/><rect x="28" y="23" width="1.02" height="1.02"/><rect x="32" y="23" width="1.02" height="1.02"/><rect x="33" y="23" width="1.02" height="1.02"/><rect x="2" y="24" width="1.02" height="1.02"/><rect x="4" y="24" width="1.02" height="1.02"/><rect x="5" y="24" width="1.02" height="1.02"/><rect x="9" y="24" width="1.02" height="1.02"/><rect x="10" y="24" width="1.02" height="1.02"/><rect x="13" y="24" width="1.02" height="1.02"/><rect x="14" y="24" width="1.02" height="1.02"/><rect x="16" y="24" width="1.02" height="1.02"/><rect x="19" y="24" width="1.02" height="1.02"/><rect x="21" y="24" width="1.02" height="1.02"/><rect x="24" y="24" width="1.02" height="1.02"/><rect x="27" y="24" width="1.02" height="1.02"/><rect x="28" y="24" width="1.02" height="1.02"/><rect x="29" y="24" width="1.02" height="1.02"/><rect x="30" y="24" width="1.02" height="1.02"/><rect x="33" y="24" width="1.02" height="1.02"/><rect x="1" y="25" width="1.02" height="1.02"/><rect x="5" y="25" width="1.02" height="1.02"/><rect x="6" y="25" width="1.02" height="1.02"/><rect x="7" y="25" width="1.02" height="1.02"/><rect x="11" y="25" width="1.02" height="1.02"/><rect x="14" y="25" width="1.02" height="1.02"/><rect x="18" y="25" width="1.02" height="1.02"/><rect x="20" y="25" width="1.02" height="1.02"/><rect x="25" y="25" width="1.02" height="1.02"/><rect x="26" y="25" width="1.02" height="1.02"/><rect x="27" y="25" width="1.02" height="1.02"/><rect x="28" y="25" width="1.02" height="1.02"/><rect x="29" y="25" width="1.02" height="1.02"/><rect x="32" y="25" width="1.02" height="1.02"/><rect x="33" y="25" width="1.02" height="1.02"/><rect x="9" y="26" width="1.02" height="1.02"/><rect x="11" y="26" width="1.02" height="1.02"/><rect x="12" y="26" width="1.02" height="1.02"/><rect x="16" y="26" width="1.02" height="1.02"/><rect x="17" y="26" width="1.02" height="1.02"/><rect x="20" y="26" width="1.02" height="1.02"/><rect x="21" y="26" width="1.02" height="1.02"/><rect x="22" y="26" width="1.02" height="1.02"/><rect x="23" y="26" width="1.02" height="1.02"/><rect x="25" y="26" width="1.02" height="1.02"/><rect x="29" y="26" width="1.02" height="1.02"/><rect x="30" y="26" width="1.02" height="1.02"/><rect x="32" y="26" width="1.02" height="1.02"/><rect x="1" y="27" width="1.02" height="1.02"/><rect x="2" y="27" width="1.02" height="1.02"/><rect x="3" y="27" width="1.02" height="1.02"/><rect x="4" y="27" width="1.02" height="1.02"/><rect x="5" y="27" width="1.02" height="1.02"/><rect x="6" y="27" width="1.02" height="1.02"/><rect x="7" y="27" width="1.02" height="1.02"/><rect x="9" y="27" width="1.02" height="1.02"/><rect x="12" y="27" width="1.02" height="1.02"/><rect x="13" y="27" width="1.02" height="1.02"/><rect x="14" y="27" width="1.02" height="1.02"/><rect x="17" y="27" width="1.02" height="1.02"/><rect x="18" y="27" width="1.02" height="1.02"/><rect x="19" y="27" width="1.02" height="1.02"/><rect x="20" y="27" width="1.02" height="1.02"/><rect x="21" y="27" width="1.02" height="1.02"/><rect x="22" y="27" width="1.02" height="1.02"/><rect x="24" y="27" width="1.02" height="1.02"/><rect x="25" y="27" width="1.02" height="1.02"/><rect x="27" y="27" width="1.02" height="1.02"/><rect x="29" y="27" width="1.02" height="1.02"/><rect x="1" y="28" width="1.02" height="1.02"/><rect x="7" y="28" width="1.02" height="1.02"/><rect x="9" y="28" width="1.02" height="1.02"/><rect x="10" y="28" width="1.02" height="1.02"/><rect x="12" y="28" width="1.02" height="1.02"/><rect x="13" y="28" width="1.02" height="1.02"/><rect x="15" y="28" width="1.02" height="1.02"/><rect x="17" y="28" width="1.02" height="1.02"/><rect x="18" y="28" width="1.02" height="1.02"/><rect x="19" y="28" width="1.02" height="1.02"/><rect x="20" y="28" width="1.02" height="1.02"/><rect x="21" y="28" width="1.02" height="1.02"/><rect x="24" y="28" width="1.02" height="1.02"/><rect x="25" y="28" width="1.02" height="1.02"/><rect x="29" y="28" width="1.02" height="1.02"/><rect x="30" y="28" width="1.02" height="1.02"/><rect x="31" y="28" width="1.02" height="1.02"/><rect x="32" y="28" width="1.02" height="1.02"/><rect x="1" y="29" width="1.02" height="1.02"/><rect x="3" y="29" width="1.02" height="1.02"/><rect x="4" y="29" width="1.02" height="1.02"/><rect x="5" y="29" width="1.02" height="1.02"/><rect x="7" y="29" width="1.02" height="1.02"/><rect x="11" y="29" width="1.02" height="1.02"/><rect x="13" y="29" width="1.02" height="1.02"/><rect x="14" y="29" width="1.02" height="1.02"/><rect x="16" y="29" width="1.02" height="1.02"/><rect x="17" y="29" width="1.02" height="1.02"/><rect x="18" y="29" width="1.02" height="1.02"/><rect x="19" y="29" width="1.02" height="1.02"/><rect x="23" y="29" width="1.02" height="1.02"/><rect x="24" y="29" width="1.02" height="1.02"/><rect x="25" y="29" width="1.02" height="1.02"/><rect x="26" y="29" width="1.02" height="1.02"/><rect x="27" y="29" width="1.02" height="1.02"/><rect x="28" y="29" width="1.02" height="1.02"/><rect x="29" y="29" width="1.02" height="1.02"/><rect x="31" y="29" width="1.02" height="1.02"/><rect x="1" y="30" width="1.02" height="1.02"/><rect x="3" y="30" width="1.02" height="1.02"/><rect x="4" y="30" width="1.02" height="1.02"/><rect x="5" y="30" width="1.02" height="1.02"/><rect x="7" y="30" width="1.02" height="1.02"/><rect x="9" y="30" width="1.02" height="1.02"/><rect x="12" y="30" width="1.02" height="1.02"/><rect x="15" y="30" width="1.02" height="1.02"/><rect x="17" y="30" width="1.02" height="1.02"/><rect x="20" y="30" width="1.02" height="1.02"/><rect x="23" y="30" width="1.02" height="1.02"/><rect x="24" y="30" width="1.02" height="1.02"/><rect x="28" y="30" width="1.02" height="1.02"/><rect x="30" y="30" width="1.02" height="1.02"/><rect x="32" y="30" width="1.02" height="1.02"/><rect x="33" y="30" width="1.02" height="1.02"/><rect x="1" y="31" width="1.02" height="1.02"/><rect x="3" y="31" width="1.02" height="1.02"/><rect x="4" y="31" width="1.02" height="1.02"/><rect x="5" y="31" width="1.02" height="1.02"/><rect x="7" y="31" width="1.02" height="1.02"/><rect x="9" y="31" width="1.02" height="1.02"/><rect x="10" y="31" width="1.02" height="1.02"/><rect x="11" y="31" width="1.02" height="1.02"/><rect x="13" y="31" width="1.02" height="1.02"/><rect x="14" y="31" width="1.02" height="1.02"/><rect x="16" y="31" width="1.02" height="1.02"/><rect x="17" y="31" width="1.02" height="1.02"/><rect x="18" y="31" width="1.02" height="1.02"/><rect x="19" y="31" width="1.02" height="1.02"/><rect x="21" y="31" width="1.02" height="1.02"/><rect x="24" y="31" width="1.02" height="1.02"/><rect x="25" y="31" width="1.02" height="1.02"/><rect x="27" y="31" width="1.02" height="1.02"/><rect x="28" y="31" width="1.02" height="1.02"/><rect x="31" y="31" width="1.02" height="1.02"/><rect x="1" y="32" width="1.02" height="1.02"/><rect x="7" y="32" width="1.02" height="1.02"/><rect x="11" y="32" width="1.02" height="1.02"/><rect x="13" y="32" width="1.02" height="1.02"/><rect x="15" y="32" width="1.02" height="1.02"/><rect x="18" y="32" width="1.02" height="1.02"/><rect x="21" y="32" width="1.02" height="1.02"/><rect x="25" y="32" width="1.02" height="1.02"/><rect x="26" y="32" width="1.02" height="1.02"/><rect x="28" y="32" width="1.02" height="1.02"/><rect x="29" y="32" width="1.02" height="1.02"/><rect x="33" y="32" width="1.02" height="1.02"/><rect x="1" y="33" width="1.02" height="1.02"/><rect x="2" y="33" width="1.02" height="1.02"/><rect x="3" y="33" width="1.02" height="1.02"/><rect x="4" y="33" width="1.02" height="1.02"/><rect x="5" y="33" width="1.02" height="1.02"/><rect x="6" y="33" width="1.02" height="1.02"/><rect x="7" y="33" width="1.02" height="1.02"/><rect x="9" y="33" width="1.02" height="1.02"/><rect x="12" y="33" width="1.02" height="1.02"/><rect x="13" y="33" width="1.02" height="1.02"/><rect x="14" y="33" width="1.02" height="1.02"/><rect x="17" y="33" width="1.02" height="1.02"/><rect x="18" y="33" width="1.02" height="1.02"/><rect x="20" y="33" width="1.02" height="1.02"/><rect x="21" y="33" width="1.02" height="1.02"/><rect x="22" y="33" width="1.02" height="1.02"/><rect x="23" y="33" width="1.02" height="1.02"/><rect x="24" y="33" width="1.02" height="1.02"/><rect x="29" y="33" width="1.02" height="1.02"/><rect x="31" y="33" width="1.02" height="1.02"/></g></svg>
+        <p>Inquadra con la fotocamera del telefono per aprire l'app.</p>
+      </aside>
+    </div>
+  </div></section>
+
+  <!-- condivisione -->
+  <section class="sheet"><div class="paper">
+    <h2 class="hand">Fate la spesa in due</h2>
+    <p class="kicker">La lista condivisa è facoltativa: senza, l'app funziona benissimo solo sul tuo telefono.</p>
+    <div class="share-grid">
+      <div class="card"><div class="num">1</div><p>Uno dei due tocca il pulsante <b>Solo qui</b> in alto a destra e sceglie <b>Crea una lista condivisa</b>.</p></div>
+      <div class="card"><div class="num">2</div><p>L'app crea un codice come <span class="code">ABCD-EFGH-JKLM-NPQR</span>: con <b>Condividi il codice</b> lo mandi a chi fa la spesa con te.</p></div>
+      <div class="card"><div class="num">3</div><p>L'altra persona installa l'app, tocca <b>Solo qui</b>, inserisce il codice e tocca <b>Unisciti</b>. Fatto: la lista è la stessa per entrambi.</p></div>
+    </div>
+  </div></section>
+
+  <!-- buono a sapersi -->
+  <section class="sheet"><div class="paper margin">
+    <h2 class="hand">Buono a sapersi</h2>
+    <div class="faq">
+      <details><summary>Le corsie vanno bene per il mio supermercato?</summary>
+        <p>L'app parte con le corsie di un supermercato preciso, già pronte per i prodotti più comuni. Se il tuo è diverso, tieni premuto un elemento e scegli la corsia giusta: l'app la ricorda per le volte successive.</p></details>
+      <details><summary>Devo creare un account?</summary>
+        <p>No. Niente email, niente password: apri l'app e scrivi. Per la lista condivisa basta il codice.</p></details>
+      <details><summary>Dove finiscono i miei dati?</summary>
+        <p>Se usi l'app da solo, la lista e lo storico restano sul tuo telefono. Se attivi la lista condivisa, vengono salvati anche su un database Firebase (Google) gestito da chi ti ha mandato il link, accessibile solo con il codice della vostra lista. Non ci sono pubblicità né tracciamenti.</p></details>
+      <details><summary>Quanto costa?</summary>
+        <p>Niente. È un progetto personale, condiviso con amici e parenti.</p></details>
+      <details><summary>E se cambio telefono?</summary>
+        <p>Con la lista condivisa basta unirsi di nuovo con il codice. Altrimenti, dallo Storico puoi esportare un backup e reimportarlo sul telefono nuovo.</p></details>
+      <details><summary>Si aggiorna da sola?</summary>
+        <p>Sì: quando esce una versione nuova, l'app la scarica la prima volta che la apri con la rete. A volte serve chiuderla e riaprirla.</p></details>
+    </div>
+  </div></section>
+
+  <!-- chiusura -->
+  <section class="sheet"><div class="paper final">
+    <h2 class="hand">Pronta? Prendi la matita.</h2>
+    <p class="kicker" style="margin-left:auto;margin-right:auto">Apri l'app sul telefono, oppure mandala a chi fa la spesa con te.</p>
+    <div class="cta">
+      <a class="btn primary" href="./">Apri l'app</a>
+      <a class="btn pencil" id="waLink" href="#" target="_blank" rel="noopener">Invia su WhatsApp</a>
+      <button class="btn ghost" id="copyLink" type="button">Copia il link</button>
+    </div>
+  </div></section>
+
+  <footer>Lista della spesa · gratis, senza pubblicità e senza registrazione</footer>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+(() => {
+  const $ = s => document.querySelector(s);
+  // bordo strappato in cima a ogni foglio, come nell'app
+  document.querySelectorAll('.paper').forEach((el, i) => {
+    let x = (i + 3) * 9301 + 49297; const r = () => (x = (x * 9301 + 49297) % 233280) / 233280;
+    const pts = []; let q = 0;
+    while (q < 100){ pts.push(`${q.toFixed(2)}% ${(r() * 9).toFixed(1)}px`); q += 0.8 + r() * 1.8; }
+    pts.push(`100% ${(r() * 9).toFixed(1)}px`, '100% 100%', '0% 100%');
+    el.style.clipPath = `polygon(${pts.join(',')})`;
+  });
+  const PAGE = new URL('benvenuto.html', location.href).href;
+  const MSG = 'Ti consiglio questa app per la lista della spesa: si ordina da sola per corsia e si può condividere in famiglia. È gratis.';
+  let tt;
+  const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2200); };
+
+  // demo: tocca per depennare
+  const items = [...document.querySelectorAll('#demo li')];
+  const sub = () => { const left = items.filter(li => !li.classList.contains('done')).length; $('#demoSub').textContent = left ? `${left} da prendere` : 'tutto preso!'; return left; };
+  items.forEach(li => li.addEventListener('click', () => {
+    li.classList.toggle('done');
+    try{ navigator.vibrate && navigator.vibrate(8); }catch(e){}
+    if (!sub()){
+      $('#doneMsg').classList.add('show');
+      setTimeout(() => { $('#doneMsg').classList.remove('show'); items.forEach(i => i.classList.remove('done')); sub(); }, 3200);
+    }
+  }));
+
+  // schede iPhone / Android, preselezionate in base al telefono
+  const tab = w => {
+    $('#tIos').classList.toggle('on', w === 'ios'); $('#tAnd').classList.toggle('on', w === 'and');
+    $('#pIos').hidden = w !== 'ios'; $('#pAnd').hidden = w !== 'and';
+  };
+  $('#tIos').addEventListener('click', () => tab('ios'));
+  $('#tAnd').addEventListener('click', () => tab('and'));
+  if (/Android/i.test(navigator.userAgent)) tab('and');
+
+  // condivisione
+  $('#waLink').href = 'https://wa.me/?text=' + encodeURIComponent(MSG + ' ' + PAGE);
+  const copy = async () => {
+    try{ await navigator.clipboard.writeText(PAGE); toast('Link copiato'); }
+    catch(e){ prompt('Copia il link:', PAGE); }
+  };
+  $('#copyLink').addEventListener('click', copy);
+  $('#shareTop').addEventListener('click', async () => {
+    if (navigator.share){
+      try{ await navigator.share({title: 'Lista della spesa', text: MSG, url: PAGE}); }catch(e){}
+    } else copy();
+  });
+})();
+</script>
+</body>
+</html>
