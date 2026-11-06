@@ -66,8 +66,8 @@ input{font:inherit;color:inherit}
   background-attachment:local;
 }
 .scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:calc(var(--sq)*2) 18px calc(130px + var(--safe-b)) 0;}
-.head{padding-left:66px;padding-right:96px;margin-bottom:calc(var(--sq)*0.5)}
+  padding:calc(var(--sq)*3) 18px calc(130px + var(--safe-b)) 0;}
+.head{padding-left:66px;margin-bottom:calc(var(--sq)*0.5)}
 .head h1{font-family:var(--hand);font-weight:700;color:var(--ink);font-size:42px;line-height:44px;margin:0;letter-spacing:.3px}
 .head .sub{font-family:var(--hand);font-size:22px;line-height:22px;color:var(--ink-soft);height:22px}
 
@@ -238,8 +238,52 @@ ul.list{list-style:none;margin:0;padding:0}
 .backup .btn{height:42px;font-size:14px}
 .none-yet{font-family:var(--hand);font-size:26px;color:var(--muted);padding:16px 4px;line-height:1.3}
 
+/* ---------- il mio supermercato ---------- */
+.panel .scroll.plain{background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:var(--sq) var(--sq),var(--sq) var(--sq)}
+.aisles{list-style:none;margin:0 0 12px;padding:0;background:#fff;border:1px solid rgba(31,58,138,.14);border-radius:12px;overflow:hidden}
+.aisles li{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 8px;border-top:1px solid rgba(31,58,138,.1)}
+.aisles li:first-child{border-top:0}
+.aisles li.flash{animation:flash .8s}
+@keyframes flash{from{background:rgba(242,194,48,.35)}to{background:transparent}}
+.ab{position:relative;flex:0 0 auto;width:46px;height:40px;display:grid;place-items:center;font-family:var(--hand);font-weight:700;color:var(--red);font-size:22px;transform:rotate(-4deg)}
+.ab.rep{font-size:16px}
+.ab svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ab.none{color:var(--muted)}
+.amain{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;text-align:left;min-height:50px;padding:2px 0}
+.amain b{font-family:var(--hand);font-size:25px;font-weight:700;color:var(--ink);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amain small{font-size:12.5px;color:var(--muted)}
+.mv{flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:rgba(31,58,138,.07);color:var(--ink);display:grid;place-items:center}
+.mv svg{width:18px;height:18px}
+.mv:disabled{opacity:.25}
+.mv:active{background:rgba(31,58,138,.16)}
+.store-intro{font-size:13.5px;color:#4a473f;line-height:1.45;margin:0 0 12px}
+.btn.wide{width:100%}
+.danger-zone{margin-top:22px;padding-top:14px;border-top:1px dashed rgba(31,58,138,.25)}
+.danger-zone .btn{margin-top:8px}
+.prods{list-style:none;margin:0 0 12px;padding:0;background:#fff;border:1px solid rgba(31,58,138,.14);border-radius:12px;overflow:hidden}
+.prods li{border-top:1px solid rgba(31,58,138,.1)}
+.prods li:first-child{border-top:0}
+.prods button{width:100%;display:flex;align-items:center;gap:8px;text-align:left;padding:8px 12px;min-height:46px}
+.prods .nm{flex:1;font-family:var(--hand);font-size:25px;color:var(--ink);line-height:1.05}
+.prods .tag{font-size:11.5px;color:#2e9e5b;font-weight:600}
+.prods .chev{color:var(--muted);font-size:20px}
+.add-row{display:flex;gap:10px;align-items:flex-end;margin:4px 0 16px}
+.add-row .hand-input{flex:1;font-size:26px}
+.add-row .btn{flex:0 0 auto;height:44px;padding:0 16px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px}
+.two{display:flex;gap:14px}
+.two .fld:first-child{flex:1}
+.two .fld:last-child{flex:0 0 96px}
+.sel{width:100%;height:44px;border-radius:10px;border:1px solid rgba(31,58,138,.25);background:#fff;padding:0 10px;font-size:15px;color:var(--text)}
+.mini-link{background:none;border:0;color:var(--ink);font-size:12.5px;font-weight:600;text-decoration:underline;text-transform:none;letter-spacing:0;padding:0;margin-left:8px}
+.strip-label .r{display:flex;align-items:baseline}
+
 /* ---------- condivisione ---------- */
-.share-btn{position:absolute;top:22px;right:12px;z-index:3;height:34px;padding:0 11px 0 9px;border-radius:17px;display:flex;align-items:center;gap:6px;
+.top-actions{position:absolute;top:18px;right:12px;z-index:3;display:flex;gap:8px;align-items:center}
+.icon-btn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.85);border:1px solid rgba(31,58,138,.18);color:var(--red);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.icon-btn svg{width:19px;height:19px}
+.share-btn{height:34px;padding:0 11px 0 9px;border-radius:17px;display:flex;align-items:center;gap:6px;
   background:rgba(255,255,255,.85);border:1px solid rgba(31,58,138,.18);color:var(--ink);font-size:12.5px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .share-btn svg{width:18px;height:18px}
 .dot{width:8px;height:8px;border-radius:50%;background:#b9b5aa;flex:0 0 auto}
@@ -261,7 +305,10 @@ ul.list{list-style:none;margin:0;padding:0}
 
 <div class="sheet-wrap" id="mainWrap">
   <div class="sheet" id="mainSheet">
-    <button class="share-btn" id="btnShare" aria-label="Condivisione"><span class="dot" id="syncDot"></span><span id="syncTxt">Solo qui</span></button>
+    <div class="top-actions">
+      <button class="icon-btn" id="btnStore" aria-label="Il mio supermercato: corsie e prodotti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 4.5 4h15L21 9.5"/><path d="M3 9.5c0 1.4 1.1 2.5 2.5 2.5S8 10.9 8 9.5c0 1.4 1.1 2.5 2.5 2.5h3c1.4 0 2.5-1.1 2.5-2.5 0 1.4 1.1 2.5 2.5 2.5S21 10.9 21 9.5"/><path d="M5 12v8h14v-8"/><path d="M10 20v-4.5h4V20"/></svg></button>
+      <button class="share-btn" id="btnShare" aria-label="Condivisione"><span class="dot" id="syncDot"></span><span id="syncTxt">Solo qui</span></button>
+    </div>
     <div class="scroll paper-grid" id="mainScroll">
       <div class="head">
         <h1>Lista della spesa</h1>
@@ -299,6 +346,20 @@ ul.list{list-style:none;margin:0;padding:0}
           <button id="tabReport" role="tab">Report PDF</button>
         </div>
         <div id="panelBody"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="storePanel" aria-hidden="true">
+  <div class="sheet-wrap">
+    <div class="sheet" id="storeSheet">
+      <div class="scroll plain" id="storeScroll">
+        <div class="panel-top">
+          <button class="back" id="storeBack" aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <h1 id="storeTitle">Il mio supermercato</h1>
+        </div>
+        <div id="storeBody"></div>
       </div>
     </div>
   </div>
@@ -361,7 +422,7 @@ $('#panelSheet').style.clipPath = torn(31, 9);
    history: [{id, date:'YYYY-MM-DD', ts, amount, items:[...]}]
    ========================================================= */
 const LS = 'spesa.v1';
-function fresh(){ return {v:1, list:[], catalog:{}, history:[], updated:0}; }
+function fresh(){ return {v:1, list:[], catalog:{}, history:[], updated:0, layout: defaultLayout(), layoutPreset: 'esselunga'}; }
 function sane(o){
   if (!o || typeof o !== 'object') return null;
   return {
@@ -370,12 +431,14 @@ function sane(o){
     catalog: o.catalog && typeof o.catalog === 'object' ? o.catalog : {},
     history: Array.isArray(o.history) ? o.history.filter(h => h && h.date && isFinite(h.amount)) : [],
     updated: +o.updated || 0,
-    seedV: +o.seedV || 0
+    seedV: +o.seedV || 0,
+    layout: cleanLayout(o.layout) || defaultLayout(),
+    layoutPreset: o.layoutPreset || (cleanLayout(o.layout) ? 'custom' : 'esselunga')
   };
 }
 function loadLocal(){ try{ return sane(JSON.parse(localStorage.getItem(LS))); }catch(e){ return null; } }
 /* --- mappa del negozio: ordine di percorso --- */
-const LAYOUT = [
+const LAYOUT_DEFAULT = [
   {id:'FV',  name:'Frutta e verdura', badge:'F&V'},
   {id:'1'},
   {id:'PES', name:'Pescheria',   badge:'pesce'},
@@ -385,13 +448,33 @@ const LAYOUT = [
   {id:'PAN', name:'Panetteria',  badge:'pane'},
   ...Array.from({length:17}, (_, i) => ({id:String(i + 2)}))
 ];
-const LPOS = Object.fromEntries(LAYOUT.map((l, i) => [l.id, l]));
-LAYOUT.forEach((l, i) => l.rank = i);
+const BASIC_LAYOUT = () => [{id:'FV', name:'Frutta e verdura', badge:'F&V'}, ...Array.from({length:20}, (_, i) => ({id:String(i + 1)}))];
+const defaultLayout = () => LAYOUT_DEFAULT.map(l => Object.assign({}, l));
+function cleanLayout(L){
+  if (!Array.isArray(L) || !L.length) return null;
+  const seen = new Set(), out = [];
+  L.forEach(l => {
+    if (!l || l.id == null) return;
+    const id = String(l.id).trim().toUpperCase(); if (!id || seen.has(id)) return; seen.add(id);
+    const e = {id}; if (l.name) e.name = String(l.name).slice(0, 40); if (l.badge) e.badge = String(l.badge).slice(0, 6);
+    out.push(e);
+  });
+  return out.length ? out : null;
+}
 function A(a){ if (a == null || a === '') return null; a = String(a).trim().toUpperCase(); return a || null; }
-function aisleRank(a){ a = A(a); if (a == null) return 1e9; if (LPOS[a]) return LPOS[a].rank; const n = parseFloat(a); return isFinite(n) ? 1000 + n : 5e8; }
-function aisleLabel(a){ a = A(a); if (a == null) return ''; return LPOS[a] && LPOS[a].name ? LPOS[a].name : 'corsia ' + a; }
-function aisleBadge(a){ a = A(a); return LPOS[a] && LPOS[a].badge ? LPOS[a].badge : a; }
-const isRep = a => !!(LPOS[A(a)] && LPOS[A(a)].name);
+const isNum = a => /^\d{1,3}$/.test(String(a));
+let _lmRef = null, _lm = {};
+function LM(){
+  if (!S.layout || !S.layout.length) S.layout = defaultLayout();
+  if (_lmRef !== S.layout){ _lmRef = S.layout; _lm = {}; S.layout.forEach((l, i) => { _lm[l.id] = Object.assign({rank: i}, l); }); }
+  return _lm;
+}
+const inLayout = a => !!LM()[A(a)];
+function aisleRank(a){ a = A(a); if (a == null) return 1e9; const m = LM()[a]; if (m) return m.rank; const n = parseFloat(a); return isFinite(n) ? 1000 + n : 5e8; }
+function aisleName(a){ a = A(a); if (a == null) return 'Senza corsia'; const m = LM()[a]; return m && m.name ? m.name : (isNum(a) ? 'Corsia ' + a : a); }
+function aisleLabel(a){ a = A(a); if (a == null) return ''; const m = LM()[a]; return m && m.name ? m.name : (isNum(a) ? 'corsia ' + a : a); }
+function aisleBadge(a){ a = A(a); if (a == null) return ''; const m = LM()[a]; if (m && m.badge) return m.badge; if (isNum(a)) return a; return ((m && m.name) || a).slice(0, 5).toLowerCase(); }
+const isRep = a => String(aisleBadge(a)).length > 2;
 const SEED_V = 1;
 const SEEDS = {
   FV:'Mele|Pere|Banane|Arance|Mandarini|Limoni|Kiwi|Uva|Fragole|Ananas|Pomodori|Pomodorini|Insalata|Lattuga|Rucola|Patate|Cipolle|Aglio|Carote|Zucchine|Melanzane|Peperoni|Finocchi|Sedano|Spinaci|Broccoli|Cavolfiore|Funghi|Basilico|Prezzemolo|Avocado',
@@ -446,7 +529,25 @@ const GUESS = [
   [/^pane\b|focacc|panin|baguette|\bpane /, 'PAN'],
   [/\bmel[ea]\b|\bper[ae]\b|banan|aranc|mandarin|limon|kiwi|\buva\b|fragol|ananas|pomodor|insalat|rucola|patat|cipoll|aglio|carot|zucchin|melanzan|peperon|finocch|sedano|spinac|broccol|cavol|fungh|basilico|prezzemolo|avocado|frutta|verdur|lattuga|pesche|albicocch|cilieg|anguri|melone/, 'FV']
 ];
-function guessAisle(name){ const n = norm(name); if (!n) return null; for (const [re, a] of GUESS) if (re.test(n)) return a; return null; }
+function guessAisle(name){
+  const n = norm(name); if (!n) return null;
+  const first = n.split(' ')[0], words = n.split(' ').filter(w => w.length >= 4);
+  let best = null, score = 0;
+  for (const [k, c] of Object.entries(S.catalog)){
+    if (c.aisle == null || !inLayout(c.aisle) || k === n) continue;
+    const kw = k.split(' ');
+    let sc = 0;
+    if (first.length >= 3 && kw[0] === first) sc = 3;
+    else if (words.some(w => kw.includes(w))) sc = 2;
+    else if (words.some(w => kw.some(x => x.length >= 5 && (x.startsWith(w.slice(0, 5)) || w.startsWith(x.slice(0, 5)))))) sc = 1;
+    if (!sc) continue;
+    sc += Math.min(c.uses || 0, 9) * 0.01;
+    if (sc > score){ score = sc; best = c.aisle; }
+  }
+  if (score >= 3) return best;
+  for (const [re, a] of GUESS) if ((S.layoutPreset === 'esselunga' || a === 'FV') && re.test(n) && inLayout(a)) return a;
+  return score >= 1 ? best : null;
+}
 function migrate(st){
   st.list.forEach(i => { i.aisle = A(i.aisle); });
   Object.values(st.catalog).forEach(c => { c.aisle = A(c.aisle); });
@@ -494,7 +595,7 @@ async function remoteFlush(){
     while (mainDirty || dirtyYears.size){
       if (mainDirty){
         mainDirty = false;
-        await R.col.doc('main').set({list: JSON.stringify(S.list), catalog: JSON.stringify(S.catalog), seedV: S.seedV || 0, updated: S.updated});
+        await R.col.doc('main').set({list: JSON.stringify(S.list), catalog: JSON.stringify(S.catalog), seedV: S.seedV || 0, layout: JSON.stringify(S.layout), layoutPreset: S.layoutPreset || null, updated: S.updated});
       }
       for (const y of [...dirtyYears]){
         dirtyYears.delete(y);
@@ -518,7 +619,7 @@ async function remotePull(){
       else if (/^y\d{4}$/.test(d.id)) { try{ hist.push(...JSON.parse(v.entries)); }catch(e){} }
     });
     if (main && (+main.updated || 0) > S.updated){
-      const st = sane({list: JSON.parse(main.list || '[]'), catalog: JSON.parse(main.catalog || '{}'), history: hist, updated: main.updated, seedV: main.seedV});
+      const st = sane({list: JSON.parse(main.list || '[]'), catalog: JSON.parse(main.catalog || '{}'), history: hist, updated: main.updated, seedV: main.seedV, layout: (() => { try{ return JSON.parse(main.layout || 'null'); }catch(e){ return null; } })(), layoutPreset: main.layoutPreset});
       if (st){ S = st; if (migrate(S)) persist(); try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} render(); if (panelOpen) renderPanel(); }
     } else if (!main || (+main.updated || 0) < S.updated){
       if (S.updated){ mainDirty = true; S.history.forEach(h => dirtyYears.add(h.date.slice(0,4))); remoteFlush(); }
@@ -608,7 +709,8 @@ async function writeOps(ops, hid, wait){
   for (let i = 0; i < rest.length; i += 400){
     const b = fs.writeBatch(db);
     rest.slice(i, i + 400).forEach(([t, col, id, data, inc]) => {
-      const ref = fs.doc(base, col, id);
+      const ref = t === 'hh' ? base : fs.doc(base, col, id);
+      if (t === 'hh'){ b.set(base, col, {merge: true}); return; }
       if (t === 'del') b.delete(ref);
       else { const d = Object.assign({}, data); if (inc) d[inc] = fs.increment(1); b.set(ref, d, {merge: true}); }
     });
@@ -627,12 +729,19 @@ function detach(){ Cloud.unsubs.forEach(u => { try{ u(); }catch(e){} }); Cloud.u
 function attach(){
   const {fs} = Cloud.fb, base = hhRef();
   detach();
-  const seen = {items:false, catalog:false, history:false};
+  const seen = {items:false, catalog:false, history:false, hh:false};
+  const ready = () => { if (seen.items && seen.catalog && seen.history && seen.hh){ saveLocal(); render(); if (panelOpen) renderPanel(); if (storeOpen) renderStore(); } };
+  Cloud.unsubs.push(fs.onSnapshot(base, {includeMetadataChanges: true}, snap => {
+    const d = snap.exists() ? snap.data() : null;
+    const L = d && cleanLayout(d.layout);
+    if (L && JSON.stringify(L) !== JSON.stringify(S.layout)){ S.layout = L; S.layoutPreset = d.layoutPreset || 'custom'; }
+    seen.hh = true; ready();
+  }, err => { console.warn(err); }));
   const on = (col, fn) => Cloud.unsubs.push(fs.onSnapshot(fs.collection(base, col), {includeMetadataChanges: true}, snap => {
     fn(snap.docs.map(d => Object.assign({id: d.id}, d.data())));
     seen[col] = true;
     setStatus(snap.metadata.fromCache ? (navigator.onLine === false ? 'offline' : (Cloud.status === 'online' ? 'online' : 'connecting')) : 'online');
-    if (seen.items && seen.catalog && seen.history){ saveLocal(); render(); if (panelOpen) renderPanel(); }
+    ready();
   }, err => { console.warn(err); setStatus('error'); }));
   on('items', docs => { S.list = docs.filter(d => d.name).map(d => ({id: d.id, key: d.key || norm(d.name), name: d.name, aisle: A(d.aisle), done: !!d.done, t: d.t || 0})); });
   on('catalog', docs => { const c = {}; docs.forEach(d => { if (d.key && d.name) c[d.key] = {name: d.name, aisle: A(d.aisle), uses: d.uses || 0, last: d.last || 0}; }); S.catalog = c; });
@@ -662,7 +771,7 @@ async function createHousehold(btn){
   try{
     await fbLoad();
     const hid = genCode();
-    await Cloud.fb.fs.setDoc(hhRef(hid), {created: Date.now(), v: 1});
+    await Cloud.fb.fs.setDoc(hhRef(hid), {created: Date.now(), v: 1, layout: S.layout, layoutPreset: S.layoutPreset || 'esselunga'});
     await writeOps(fullOps(S), hid, true);
     Cloud.hid = hid; localStorage.setItem(CK, hid);
     attach(); setStatus('online');
@@ -865,17 +974,19 @@ function closeModal(instant){
   if (instant){ o.remove(); return; }
   o.classList.remove('show'); setTimeout(() => o.remove(), 220);
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (modalEl) closeModal(); else if (panelOpen) closePanel(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (modalEl) closeModal(); else if (storeOpen) storeBackAction(); else if (panelOpen) closePanel(); } });
 
 /* ---------- selettore corsia/reparto ---------- */
 function stripHTML(id){
-  return `<div class="strip-label"><span>Corsia o reparto</span><b id="${id}Lbl"></b></div>
-    <div class="strip" id="${id}">${LAYOUT.map(l => `<button type="button" data-a="${l.id}" class="${l.name ? '' : 'n'}">${l.name || l.id}</button>`).join('')}
+  return `<div class="strip-label"><span class="r">Corsia o reparto<button type="button" class="mini-link" data-store-link>modifica</button></span><b id="${id}Lbl"></b></div>
+    <div class="strip" id="${id}">${S.layout.map(l => `<button type="button" data-a="${esc(l.id)}" class="${l.name ? '' : 'n'}">${esc(l.name || l.id)}</button>`).join('')}
     <button type="button" data-a="" class="none-b">nessuna</button></div>`;
 }
 function bindStrip(root, id, onPick){
   const el = root.querySelector('#' + id), lbl = root.querySelector('#' + id + 'Lbl');
   el.addEventListener('click', e => { const b = e.target.closest('button'); if (b){ buzz(5); onPick(A(b.dataset.a)); } });
+  const sl = root.querySelector('[data-store-link]');
+  if (sl) sl.addEventListener('click', () => { closeModal(); openStore(); });
   return (a, note) => {
     a = A(a);
     el.querySelectorAll('button').forEach(b => {
@@ -1125,6 +1236,251 @@ function openComplete(auto){
     toast(`Spesa di ${eur(n)} salvata`);
   });
   setTimeout(() => inp.focus(), 80);
+}
+
+/* =========================================================
+   Il mio supermercato: ordine delle corsie, nuove corsie, prodotti
+   ========================================================= */
+let storeOpen = false, storeView = null, flashId = null;
+const NONE = '__none';
+const ICON_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>';
+const ICON_DN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+$('#storeSheet').style.clipPath = torn(53, 9);
+function openStore(view){
+  storeOpen = true; storeView = view || null;
+  if (panelOpen) closePanel();
+  $('#storePanel').classList.add('show'); $('#storePanel').setAttribute('aria-hidden', 'false');
+  renderStore(); $('#storeScroll').scrollTop = 0;
+}
+function closeStore(){ storeOpen = false; $('#storePanel').classList.remove('show'); $('#storePanel').setAttribute('aria-hidden', 'true'); render(); }
+function storeBackAction(){ if (storeView){ flashId = storeView; storeView = null; renderStore(); } else closeStore(); }
+$('#storeBack').addEventListener('click', storeBackAction);
+$('#btnStore').addEventListener('click', () => openStore());
+
+function prodsIn(id){
+  return Object.entries(S.catalog)
+    .filter(([, c]) => id === NONE ? (c.aisle == null || !inLayout(c.aisle)) : A(c.aisle) === id)
+    .sort((a, b) => a[1].name.localeCompare(b[1].name, 'it'));
+}
+function commitLayout(extraOps){
+  S.layout = S.layout.slice();
+  persist(null, [['hh', {layout: S.layout, layoutPreset: S.layoutPreset || 'custom'}], ...(extraOps || [])]);
+  render(); renderStore();
+}
+function setAisleOf(keys, a){
+  const ops = [];
+  keys.forEach(k => { const c = S.catalog[k]; if (c && A(c.aisle) !== A(a)){ c.aisle = A(a); ops.push(catOp(k)); } });
+  const ks = new Set(keys);
+  S.list.forEach(i => { if (ks.has(i.key) && A(i.aisle) !== A(a)){ i.aisle = A(a); ops.push(['upd', 'items', i.id, {aisle: A(a)}]); } });
+  return ops;
+}
+function badgeHTML(a){
+  if (a == null) return `<span class="ab none">–</span>`;
+  return `<span class="ab${isRep(a) ? ' rep' : ''}">${circle(aisleRank(a))}${esc(aisleBadge(a))}</span>`;
+}
+function renderStore(){
+  if (!storeOpen) return;
+  const body = $('#storeBody');
+  if (storeView) return renderAisle(body, storeView);
+  $('#storeTitle').textContent = 'Il mio supermercato';
+  const counts = {}; let none = 0;
+  Object.values(S.catalog).forEach(c => { const a = A(c.aisle); if (a && inLayout(a)) counts[a] = (counts[a] || 0) + 1; else none++; });
+  const n = S.layout.length;
+  body.innerHTML = `
+    <p class="store-intro">Quest'ordine è il tuo giro nel negozio: la lista segue esattamente questa sequenza. Sposta corsie e reparti con le frecce, toccali per rinominarli o per vedere e spostare i prodotti.</p>
+    <ul class="aisles">${S.layout.map((l, i) => `
+      <li data-id="${esc(l.id)}" class="${l.id === flashId ? 'flash' : ''}">
+        <button class="amain" data-open="${esc(l.id)}" style="flex-direction:row;align-items:center;justify-content:flex-start;gap:8px">
+          ${badgeHTML(l.id)}
+          <span style="display:flex;flex-direction:column;min-width:0"><b>${esc(aisleName(l.id))}</b><small>${counts[l.id] ? `${counts[l.id]} ${counts[l.id] === 1 ? 'prodotto' : 'prodotti'}` : 'nessun prodotto'}</small></span>
+        </button>
+        <button class="mv" data-up="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Sposta prima">${ICON_UP}</button>
+        <button class="mv" data-dn="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="Sposta dopo">${ICON_DN}</button>
+      </li>`).join('')}
+      <li><button class="amain" data-open="${NONE}" style="flex-direction:row;align-items:center;justify-content:flex-start;gap:8px">${badgeHTML(null)}
+        <span style="display:flex;flex-direction:column"><b style="color:var(--muted)">Senza corsia</b><small>${none} ${none === 1 ? 'prodotto' : 'prodotti'}</small></span></button></li>
+    </ul>
+    <button class="btn primary wide" id="stAdd">+ Aggiungi corsia o reparto</button>
+    <div class="danger-zone">
+      <p class="store-intro" style="margin:0">${S.layoutPreset === 'esselunga'
+        ? 'Fai la spesa in un altro supermercato? Puoi ripartire con corsie numerate da 1 a 20 e prodotti senza corsia: le assegni la prima volta e l\'app le ricorda.'
+        : 'Vuoi tornare alle corsie preimpostate dell\'app, con i prodotti già assegnati?'}</p>
+      ${S.layoutPreset === 'esselunga'
+        ? `<button class="btn ghost wide" id="stReset">Uso un altro supermercato</button>`
+        : `<button class="btn ghost wide" id="stDefault">Ripristina le corsie preimpostate</button>`}
+    </div>`;
+  flashId = null;
+  body.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { storeView = b.dataset.open; renderStore(); $('#storeScroll').scrollTop = 0; }));
+  const move = (i, d) => {
+    const j = i + d; if (j < 0 || j >= S.layout.length) return;
+    const L = S.layout.slice(); [L[i], L[j]] = [L[j], L[i]]; S.layout = L; flashId = L[j].id; buzz(6);
+    const y = $('#storeScroll').scrollTop; commitLayout(); $('#storeScroll').scrollTop = y;
+  };
+  body.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', () => move(+b.dataset.up, -1)));
+  body.querySelectorAll('[data-dn]').forEach(b => b.addEventListener('click', () => move(+b.dataset.dn, 1)));
+  $('#stAdd').addEventListener('click', openAddAisle);
+  const r = $('#stReset'); if (r) r.addEventListener('click', confirmOtherStore);
+  const d = $('#stDefault'); if (d) d.addEventListener('click', confirmDefaultStore);
+}
+function renderAisle(body, id){
+  const real = id !== NONE && inLayout(id);
+  if (id !== NONE && !real){ storeView = null; return renderStore(); }
+  const e = real ? LM()[id] : null;
+  $('#storeTitle').textContent = real ? aisleName(id) : 'Senza corsia';
+  const P = prodsIn(id), inList = new Set(S.list.map(i => i.key));
+  body.innerHTML = `
+    ${real ? `<div class="two">
+      <div class="fld"><label for="stName">Nome</label><input class="hand-input" id="stName" value="${esc(e.name || '')}" placeholder="${esc(isNum(id) ? 'Corsia ' + id : id)}" maxlength="40"></div>
+      <div class="fld"><label for="stBadge">Sigla</label><input class="hand-input" id="stBadge" value="${esc(e.badge || '')}" placeholder="${esc(aisleBadge(id))}" maxlength="6"></div>
+    </div>
+    <div class="mini" style="margin-top:-8px">La sigla è quella scritta nel cerchietto rosso accanto agli elementi della lista.</div>` :
+    `<p class="store-intro">Prodotti che l'app ricorda ma a cui non hai ancora dato una corsia: in lista finiscono in fondo. Toccane uno per assegnarlo.</p>`}
+    <div class="sugg-title">${P.length ? `${P.length} ${P.length === 1 ? 'prodotto' : 'prodotti'}` : 'Nessun prodotto'}</div>
+    ${P.length ? `<ul class="prods">${P.map(([k, c]) => `<li><button data-k="${esc(k)}"><span class="nm">${esc(c.name)}</span>${inList.has(k) ? '<span class="tag">in lista</span>' : ''}<span class="chev">›</span></button></li>`).join('')}</ul>` : ''}
+    ${real ? `<label class="sugg-title" for="stNew">Aggiungi un prodotto a questa corsia</label>
+    <form class="add-row" id="stNewForm" autocomplete="off"><input class="hand-input" id="stNew" placeholder="es. latte di soia" autocapitalize="sentences"><button class="btn primary">Aggiungi</button></form>
+    <div class="danger-zone"><button class="btn danger wide" id="stDel">Elimina ${esc(isNum(id) && !e.name ? 'la corsia ' + id : '«' + aisleName(id) + '»')}</button>
+      <div class="mini" style="margin-top:6px">I suoi prodotti restano nei suggerimenti, senza corsia.</div></div>` : ''}`;
+  body.querySelectorAll('.prods button').forEach(b => b.addEventListener('click', () => openProduct(b.dataset.k)));
+  if (!real) return;
+  const saveMeta = () => {
+    const nm = $('#stName').value.trim(), bd = $('#stBadge').value.trim();
+    const L = S.layout.map(l => {
+      if (l.id !== id) return l;
+      const x = {id}; if (nm) x.name = nm.slice(0, 40); if (bd) x.badge = bd.slice(0, 6); return x;
+    });
+    if (JSON.stringify(L) === JSON.stringify(S.layout)) return;
+    S.layout = L; persist(null, [['hh', {layout: S.layout, layoutPreset: S.layoutPreset || 'custom'}]]); render();
+    $('#storeTitle').textContent = aisleName(id);
+  };
+  $('#stName').addEventListener('change', saveMeta); $('#stBadge').addEventListener('change', saveMeta);
+  [$('#stName'), $('#stBadge')].forEach(i => i.addEventListener('keydown', ev => { if (ev.key === 'Enter'){ ev.preventDefault(); i.blur(); } }));
+  $('#stNewForm').addEventListener('submit', ev => {
+    ev.preventDefault();
+    const v = $('#stNew').value, k = norm(v); if (!k) return;
+    const ops = [];
+    if (!S.catalog[k]){ S.catalog[k] = {name: cap(v), aisle: id, uses: 0, last: Date.now()}; ops.push(catOp(k)); }
+    ops.push(...setAisleOf([k], id));
+    persist(null, ops); render(); renderStore(); toast(`«${S.catalog[k].name}» in ${aisleLabel(id)}`);
+    setTimeout(() => { const i = $('#stNew'); if (i) i.focus(); }, 30);
+  });
+  $('#stDel').addEventListener('click', ev => {
+    const b = ev.currentTarget;
+    if (!b.dataset.sure){ b.dataset.sure = '1'; b.textContent = 'Tocca ancora per eliminarla'; return; }
+    const keys = Object.keys(S.catalog).filter(k => A(S.catalog[k].aisle) === id);
+    const ops = setAisleOf(keys, null);
+    S.list.forEach(i => { if (A(i.aisle) === id){ i.aisle = null; ops.push(['upd', 'items', i.id, {aisle: null}]); } });
+    const name = aisleName(id);
+    S.layout = S.layout.filter(l => l.id !== id); storeView = null;
+    commitLayout(ops); toast(`«${name}» eliminata`);
+  });
+}
+function openProduct(k){
+  const c = S.catalog[k]; if (!c) return;
+  const o = openModal(`
+    <h2>${esc(c.name)}</h2>
+    <form id="pForm" autocomplete="off">
+      <div class="field"><div class="f"><label>Nome</label><input class="hand-input" id="pName" value="${esc(c.name)}"></div></div>
+      ${stripHTML('pStrip')}
+      <div class="mini">${S.list.some(i => i.key === k) ? 'È in lista adesso: anche lì si sposta nella nuova corsia.' : 'Vale da ora per tutte le volte che lo aggiungi.'}</div>
+      <div class="actions">
+        <button type="button" class="btn danger" id="pForget">Dimentica</button>
+        <button type="submit" class="btn primary">Salva</button>
+      </div>
+    </form>`);
+  o.querySelector('[data-store-link]').remove();
+  let sel = A(c.aisle);
+  const paint = bindStrip(o, 'pStrip', a => { sel = a; paint(sel); });
+  setTimeout(() => paint(sel), 30);
+  o.querySelector('#pForget').addEventListener('click', ev => {
+    const b = ev.currentTarget;
+    if (!b.dataset.sure){ b.dataset.sure = '1'; b.textContent = 'Tocca ancora'; return; }
+    delete S.catalog[k]; persist(null, [['del', 'catalog', cid(k)]]); closeModal(); renderStore(); toast(`«${c.name}» dimenticato`);
+  });
+  o.querySelector('#pForm').addEventListener('submit', ev => {
+    ev.preventDefault();
+    const nv = o.querySelector('#pName').value, nk = norm(nv); if (!nk) return;
+    const ops = [];
+    if (nk !== k){
+      const ex = S.catalog[nk];
+      S.catalog[nk] = {name: cap(nv), aisle: A(sel), uses: (ex ? ex.uses : 0) + (c.uses || 0), last: Math.max(c.last || 0, ex ? ex.last : 0)};
+      delete S.catalog[k]; ops.push(['del', 'catalog', cid(k)], catOp(nk));
+      S.list.forEach(i => { if (i.key === k){ i.key = nk; i.name = cap(nv); ops.push(['upd', 'items', i.id, {key: nk, name: i.name}]); } });
+      ops.push(...setAisleOf([nk], sel));
+    } else {
+      if (c.name !== cap(nv)){ c.name = cap(nv); ops.push(catOp(k)); S.list.forEach(i => { if (i.key === k){ i.name = c.name; ops.push(['upd', 'items', i.id, {name: c.name}]); } }); }
+      ops.push(...setAisleOf([k], sel));
+    }
+    if (ops.length) persist(null, ops);
+    closeModal(); render(); renderStore();
+  });
+}
+function openAddAisle(){
+  const o = openModal(`
+    <h2>Nuova corsia o reparto</h2>
+    <form id="naForm" autocomplete="off">
+      <div class="two">
+        <div class="fld"><label for="naName">Numero o nome</label><input class="hand-input" id="naName" placeholder="es. 19 oppure Surgelati" maxlength="40"></div>
+        <div class="fld"><label for="naBadge">Sigla</label><input class="hand-input" id="naBadge" placeholder="auto" maxlength="6"></div>
+      </div>
+      <div class="fld"><label for="naPos">Posizione nel giro</label>
+        <select class="sel" id="naPos">${S.layout.map((l, i) => `<option value="${i}" ${i === S.layout.length - 1 ? 'selected' : ''}>dopo ${esc(aisleName(l.id))}</option>`).join('')}<option value="-1">all'inizio</option></select></div>
+      <div class="err" id="naErr"></div>
+      <div class="actions"><button type="button" class="btn ghost" id="naNo">Annulla</button><button type="submit" class="btn primary">Aggiungi</button></div>
+    </form>`, {center: true});
+  o.querySelector('#naNo').addEventListener('click', () => closeModal());
+  o.querySelector('#naForm').addEventListener('submit', ev => {
+    ev.preventDefault();
+    const v = o.querySelector('#naName').value.trim(), bd = o.querySelector('#naBadge').value.trim();
+    if (!v){ o.querySelector('#naErr').textContent = 'Scrivi un numero (es. 19) o un nome (es. Surgelati)'; return; }
+    let e;
+    if (isNum(v)){
+      const id = String(+v);
+      if (inLayout(id)){ o.querySelector('#naErr').textContent = `La corsia ${id} c'è già`; return; }
+      e = {id};
+    } else {
+      if (S.layout.some(l => (l.name || '').toLowerCase() === v.toLowerCase())){ o.querySelector('#naErr').textContent = `«${v}» c'è già`; return; }
+      let id; do { id = 'X' + Math.random().toString(36).slice(2, 6).toUpperCase(); } while (inLayout(id));
+      e = {id, name: cap(v)};
+    }
+    if (bd) e.badge = bd.slice(0, 6);
+    const pos = +o.querySelector('#naPos').value + 1;
+    const L = S.layout.slice(); L.splice(pos, 0, e); S.layout = L; flashId = e.id;
+    commitLayout(); closeModal(); toast(`${aisleName(e.id)} aggiunta`);
+    setTimeout(() => { const li = document.querySelector(`.aisles li[data-id="${CSS.escape(e.id)}"]`); if (li) li.scrollIntoView({block: 'center', behavior: 'smooth'}); }, 60);
+  });
+  setTimeout(() => o.querySelector('#naName').focus(), 80);
+}
+function confirmOtherStore(){
+  const o = openModal(`<h2>Un altro supermercato</h2>
+    <p>Le corsie diventano Frutta e verdura e le corsie da 1 a 20, poi puoi rinominarle, spostarle e aggiungerne. I prodotti restano nei suggerimenti ma perdono la corsia (tranne frutta e verdura): l'app ti chiederà la corsia giusta la prima volta che li aggiungi.</p>
+    ${Cloud.hid ? '<p>La modifica vale anche per chi condivide la lista con te.</p>' : ''}
+    <div class="actions"><button class="btn ghost" id="osNo">Annulla</button><button class="btn primary" id="osOk">Riparti da zero</button></div>`, {center: true});
+  o.querySelector('#osNo').addEventListener('click', () => closeModal());
+  o.querySelector('#osOk').addEventListener('click', () => {
+    const keys = Object.keys(S.catalog).filter(k => A(S.catalog[k].aisle) && A(S.catalog[k].aisle) !== 'FV');
+    const ops = setAisleOf(keys, null);
+    S.list.forEach(i => { if (A(i.aisle) && A(i.aisle) !== 'FV'){ i.aisle = null; ops.push(['upd', 'items', i.id, {aisle: null}]); } });
+    S.layout = BASIC_LAYOUT(); S.layoutPreset = 'custom'; storeView = null;
+    commitLayout(ops); closeModal(); toast('Corsie azzerate: ora sono tutte da assegnare');
+  });
+}
+function confirmDefaultStore(){
+  const o = openModal(`<h2>Corsie preimpostate</h2>
+    <p>Torna l'elenco originale di corsie e reparti. I prodotti senza corsia che l'app conosce già riprendono quella preimpostata; quelli che hai assegnato tu restano dove sono, se la corsia esiste ancora.</p>
+    <div class="actions"><button class="btn ghost" id="dfNo">Annulla</button><button class="btn primary" id="dfOk">Ripristina</button></div>`, {center: true});
+  o.querySelector('#dfNo').addEventListener('click', () => closeModal());
+  o.querySelector('#dfOk').addEventListener('click', () => {
+    S.layout = defaultLayout(); S.layoutPreset = 'esselunga';
+    const ops = [];
+    Object.entries(SEEDS).forEach(([a, names]) => names.split('|').forEach(n => {
+      const k = norm(n), c = S.catalog[k];
+      if (!c){ S.catalog[k] = {name: n, aisle: a, uses: 0, last: 0}; ops.push(catOp(k)); }
+      else if (c.aisle == null || !inLayout(c.aisle)) ops.push(...setAisleOf([k], a));
+    }));
+    Object.keys(S.catalog).forEach(k => { const c = S.catalog[k]; if (c.aisle != null && !inLayout(c.aisle)) ops.push(...setAisleOf([k], null)); });
+    storeView = null; commitLayout(ops); closeModal(); toast('Corsie preimpostate ripristinate');
+  });
 }
 
 /* =========================================================
